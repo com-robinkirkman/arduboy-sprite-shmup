@@ -24,6 +24,7 @@ void MaskedXYSprite::render(int page_num, uint8_t *page) const {
 
 bool MaskedXYSprite::intersects(const MaskedXYSprite& other) const {
 	if (!active_ || !other.active_) return false;
-	return ShmupSprites::Collides(x(), y(), mask_.sprite().raster(),
-			other.x(), other.y(), other.mask_.sprite().raster());
+	return mask_.intersects(other.mask_);
+//	return ShmupSprites::Collides(x(), y(), mask_.sprite().raster(),
+//			other.x(), other.y(), other.mask_.sprite().raster());
 }
