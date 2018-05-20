@@ -91,7 +91,7 @@ void setup() {
 
 void loop() {
 	uint32_t now = micros();
-	while (now - frame_ts_ < 1000000 / 90) {
+	while (now - frame_ts_ < 1000000 / 60) {
 		now = micros();
 	}
 	frame_ts_ = now;
