@@ -38,6 +38,7 @@ uint32_t frame_ts_ = 0;
 uint8_t wave_countdown_ = 0;
 
 int32_t score_ = 0;
+int8_t player_impacting_ = 0;
 
 void display() {
 	uint8_t page[128];
@@ -204,6 +205,7 @@ void loop() {
 		if (bullet.intersects(player)) {
 			score_ -= 500;
 			bullet.setActive(false);
+			player_impacting_ = 16;
 		}
 	}
 
@@ -214,6 +216,7 @@ void loop() {
 		if (enemy.intersects(player)) {
 			score_ -= 500;
 			enemy.setActive(false);
+			player_impacting_ = 16;
 		}
 	}
 
@@ -302,6 +305,13 @@ void loop() {
 	}
 
 	if (score_ < -500) reset();
+
+	if (player_impacting_ > 1)
+		SpriteCore::invert(false);
+	if (player_impacting_ == 0)
+		SpriteCore::invert(true);
+	if (player_impacting_ > 0)
+		--player_impacting_;
 
 	display();
 }
