@@ -40,12 +40,12 @@ uint8_t wave_countdown_ = 0;
 int32_t score_ = 0;
 int8_t player_impacting_ = 0;
 
-void display() {
+void display(List<List<MaskedXYSprite>*> sprites) {
 	uint8_t page[128];
 	for (int n = 0; n < 8; ++n) {
 		memset(page, 0, 128);
-		for (size_t i = 0; i < sprites_.size(); ++i) {
-			List<MaskedXYSprite> &list = *sprites_[i];
+		for (size_t i = 0; i < sprites.size(); ++i) {
+			List<MaskedXYSprite> &list = *sprites[i];
 			for (size_t j = 0; j < list.size(); ++j) {
 				list[j].render(n, page);
 			}
@@ -70,9 +70,25 @@ void reset() {
 	player_impacting_ = 0;
 }
 
+void setRGBled(uint8_t red, uint8_t green, uint8_t blue)
+{
+#ifdef ARDUBOY_10 // RGB, all the pretty colors
+  // inversion is necessary because these are common annode LEDs
+  analogWrite(RED_LED, 255 - red);
+  analogWrite(GREEN_LED, 255 - green);
+  analogWrite(BLUE_LED, 255 - blue);
+#elif defined(AB_DEVKIT)
+  // only blue on devkit
+  digitalWrite(BLUE_LED, ~blue);
+#endif
+}
+
+
 void setup() {
 	SpriteCore::begin();
 	if (SpriteCore::buttonsState() && UP_BUTTON) {
+		SpriteCore::allPixelsOn(true);
+		setRGBled(255, 255, 255);
 		while (true) SpriteCore::idle();
 	}
 
@@ -305,7 +321,37 @@ void loop() {
 		}
 	}
 
-	if (score_ < -500) reset();
+	if (score_ < -500) {
+		SpriteCore::invert(false);
+
+		ArrayList<MaskedXYSprite, 9> gameover;
+		char buf[] = "game over";
+		for (int i = 0; i < 9; ++i) {
+			gameover[i] = MaskedXYSprite(Sprite(buf[i]), {});
+			gameover[i].setX(i * 6);
+			gameover[i].setActive(true);
+		}
+		ArrayList<List<MaskedXYSprite>*, 1> sprites;
+		sprites[0] = &gameover;
+		display(sprites);
+
+		now = micros();
+		while (micros() < now + 1000000)
+			SpriteCore::idle();
+
+		while (SpriteCore::buttonsState()) SpriteCore::idle();
+		while (!SpriteCore::buttonsState()) SpriteCore::idle();
+		while (SpriteCore::buttonsState()) SpriteCore::idle();
+
+		reset();
+		SpriteCore::invert(true);
+		return;
+	}
+
+	if (score_ < 0) setRGBled(127, 0, 0);
+	else if (score_ < 500) setRGBled(127, 127, 0);
+	else if (score_ < 1000) setRGBled(0, 127, 0);
+	else setRGBled(0, 0, 127);
 
 	if (player_impacting_ > 1)
 		SpriteCore::invert(false);
@@ -314,5 +360,5 @@ void loop() {
 	if (player_impacting_ > 0)
 		--player_impacting_;
 
-	display();
+	display(sprites_);
 }
