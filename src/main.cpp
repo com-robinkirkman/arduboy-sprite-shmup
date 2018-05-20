@@ -67,6 +67,7 @@ void reset() {
 		enemy_bullets_[i] = MaskedXYSprite(ShmupSprites::bullet, ShmupSprites::bulletMask);
 
 	score_ = 0;
+	player_impacting_ = 0;
 }
 
 void setup() {
