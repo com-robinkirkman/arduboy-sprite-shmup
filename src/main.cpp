@@ -314,7 +314,7 @@ void loop() {
 	// Update health
 	{
 		char buf[health_sprites_.size()];
-		itoa(health_, buf, 10);
+		itoa(health_ + 500, buf, 10);
 		for (size_t i = 0; i < health_sprites_.size(); ++i) {
 			health_sprites_[i] = {};
 		}
@@ -393,7 +393,7 @@ void loop() {
 		return;
 	}
 
-	if (health_ < 0) setRGBled(frame_ & 1 ? 127 : 0, 0, 0);
+	if (health_ < 0) setRGBled(frame_ & 16 ? 127 : 0, 0, 0);
 	else if (health_ < 500) setRGBled(127, 127, 0);
 	else if (health_ < 1000) setRGBled(0, 127, 0);
 	else setRGBled(0, 0, 127);
