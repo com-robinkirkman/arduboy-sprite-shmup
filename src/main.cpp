@@ -28,16 +28,18 @@ ArrayList<uint8_t, kNumEnemies> enemy_frame_;
 ArrayList<int8_t, kNumEnemies> enemy_ydelta_;
 ArrayList<MaskedXYSprite, kNumEnemies * kNumBulletsPerEnemy> enemy_bullets_;
 
+ArrayList<MaskedXYSprite, 10> health_sprites_;
 ArrayList<MaskedXYSprite, 10> score_sprites_;
 
-ArrayList<List<MaskedXYSprite>*, 6> sprites_;
+ArrayList<List<MaskedXYSprite>*, 7> sprites_;
 
 uint8_t frame_ = 0;
 uint32_t frame_ts_ = 0;
 
 uint8_t wave_countdown_ = 0;
 
-int32_t score_ = 0;
+int32_t health_ = 0;
+uint32_t score_ = 0;
 int8_t player_impacting_ = 0;
 
 void display(List<List<MaskedXYSprite>*> sprites) {
@@ -66,6 +68,7 @@ void reset() {
 	for (size_t i = 0; i < enemy_bullets_.size(); ++i)
 		enemy_bullets_[i] = MaskedXYSprite(ShmupSprites::bullet, ShmupSprites::bulletMask);
 
+	health_ = 0;
 	score_ = 0;
 	player_impacting_ = 0;
 }
@@ -108,12 +111,14 @@ void setup() {
 	while (SpriteCore::buttonsState()) SpriteCore::idle();
 
 
-	sprites_[0] = &score_sprites_;
-	sprites_[1] = &player_bullets_;
-	sprites_[2] = &enemy_bullets_;
-	sprites_[3] = &player_waves_;
-	sprites_[4] = &enemy_;
-	sprites_[5] = &player_;
+	int i = 0;
+	sprites_[i++] = &health_sprites_;
+	sprites_[i++] = &score_sprites_;
+	sprites_[i++] = &player_bullets_;
+	sprites_[i++] = &enemy_bullets_;
+	sprites_[i++] = &player_waves_;
+	sprites_[i++] = &enemy_;
+	sprites_[i++] = &player_;
 
 	reset();
 }
@@ -132,7 +137,7 @@ void loop() {
 		player.setY(player.y() + 1);
 	if ((b & LEFT_BUTTON) && player.x() > 0)
 		player.setX(player.x() - 1);
-	if ((b & RIGHT_BUTTON) && player.x() < 120)
+	if ((b & RIGHT_BUTTON) && player.x() < 56)
 		player.setX(player.x() + 1);
 
 	// Bullet movement
@@ -186,6 +191,7 @@ void loop() {
 			if (bullet.intersects(enemy_bullet)) {
 				enemy_bullet.setActive(false);
 				impact = true;
+				health_ += 1;
 				score_ += 1;
 			}
 		}
@@ -195,6 +201,7 @@ void loop() {
 			if (bullet.intersects(enemy)) {
 				enemy.setActive(false);
 				impact = true;
+				health_ += 10;
 				score_ += 10;
 			}
 		}
@@ -210,6 +217,7 @@ void loop() {
 			if (!enemy_bullet.active()) continue;
 			if (wave.intersects(enemy_bullet)) {
 				enemy_bullet.setActive(false);
+				health_ += 1;
 				score_ += 1;
 			}
 		}
@@ -218,6 +226,7 @@ void loop() {
 			if (!enemy.active()) continue;
 			if (wave.intersects(enemy)) {
 				enemy.setActive(false);
+				health_ += 10;
 				score_ += 10;
 			}
 		}
@@ -228,7 +237,7 @@ void loop() {
 		MaskedXYSprite& bullet = enemy_bullets_[i];
 		if (!bullet.active()) continue;
 		if (bullet.intersects(player)) {
-			score_ -= 500;
+			health_ -= 500;
 			bullet.setActive(false);
 			player_impacting_ = 16;
 		}
@@ -239,7 +248,7 @@ void loop() {
 		MaskedXYSprite& enemy = enemy_[i];
 		if (!enemy.active()) continue;
 		if (enemy.intersects(player)) {
-			score_ -= 500;
+			health_ -= 500;
 			enemy.setActive(false);
 			player_impacting_ = 16;
 		}
@@ -302,6 +311,33 @@ void loop() {
 		}
 	}
 
+	// Update health
+	{
+		char buf[health_sprites_.size()];
+		itoa(health_, buf, 10);
+		for (size_t i = 0; i < health_sprites_.size(); ++i) {
+			health_sprites_[i] = {};
+		}
+		for (size_t i = 0; i < health_sprites_.size(); ++i) {
+			if (!buf[i]) break;
+			const uint8_t *raster = nullptr;
+			switch(buf[i]) {
+			case '-': raster = ShmupSprites::NUM_NEG; break;
+			case '0': raster = ShmupSprites::NUM_0; break;
+			case '1': raster = ShmupSprites::NUM_1; break;
+			case '2': raster = ShmupSprites::NUM_2; break;
+			case '3': raster = ShmupSprites::NUM_3; break;
+			case '4': raster = ShmupSprites::NUM_4; break;
+			case '5': raster = ShmupSprites::NUM_5; break;
+			case '6': raster = ShmupSprites::NUM_6; break;
+			case '7': raster = ShmupSprites::NUM_7; break;
+			case '8': raster = ShmupSprites::NUM_8; break;
+			case '9': raster = ShmupSprites::NUM_9; break;
+			}
+			health_sprites_[i] = MaskedXYSprite(4 * i + 1, 55, Sprite(4, 6, raster, true), {}, true);
+		}
+	}
+
 	// Update score
 	{
 		char buf[score_sprites_.size()];
@@ -325,11 +361,12 @@ void loop() {
 			case '8': raster = ShmupSprites::NUM_8; break;
 			case '9': raster = ShmupSprites::NUM_9; break;
 			}
-			score_sprites_[i] = MaskedXYSprite(4 * i + 1, 55, Sprite(4, 6, raster, true), {}, true);
+			score_sprites_[i] = MaskedXYSprite(128 - 4 * strlen(buf) + 4 * i, 55, Sprite(4, 6, raster, true), {}, true);
 		}
 	}
 
-	if (score_ < -500) {
+	if (health_ < -500) {
+		setRGBled(0, 0, 0);
 		SpriteCore::invert(false);
 
 		ArrayList<MaskedXYSprite, 9> gameover;
@@ -339,8 +376,9 @@ void loop() {
 			gameover[i].setX(i * 6);
 			gameover[i].setActive(true);
 		}
-		ArrayList<List<MaskedXYSprite>*, 1> sprites;
+		ArrayList<List<MaskedXYSprite>*, 2> sprites;
 		sprites[0] = &gameover;
+		sprites[1] = &score_sprites_;
 		display(sprites);
 
 		uint32_t now = micros();
@@ -352,13 +390,12 @@ void loop() {
 		while (SpriteCore::buttonsState()) SpriteCore::idle();
 
 		reset();
-		SpriteCore::invert(true);
 		return;
 	}
 
-	if (score_ < 0) setRGBled(127, 0, 0);
-	else if (score_ < 500) setRGBled(127, 127, 0);
-	else if (score_ < 1000) setRGBled(0, 127, 0);
+	if (health_ < 0) setRGBled(frame_ & 1 ? 127 : 0, 0, 0);
+	else if (health_ < 500) setRGBled(127, 127, 0);
+	else if (health_ < 1000) setRGBled(0, 127, 0);
 	else setRGBled(0, 0, 127);
 
 	if (player_impacting_ > 1)
