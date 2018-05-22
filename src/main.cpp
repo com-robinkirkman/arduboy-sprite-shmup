@@ -92,7 +92,21 @@ void setup() {
 		while (true) SpriteCore::idle();
 	}
 
-	SpriteCore::invert(true);
+	ArrayList<MaskedXYSprite, 9> gameover;
+	char buf[] = "ArduSHMUP";
+	for (int i = 0; i < 9; ++i) {
+		gameover[i] = MaskedXYSprite(Sprite(buf[i]), {});
+		gameover[i].setX(i * 6);
+		gameover[i].setActive(true);
+	}
+	ArrayList<List<MaskedXYSprite>*, 1> sprites;
+	sprites[0] = &gameover;
+	display(sprites);
+
+	while (SpriteCore::buttonsState()) SpriteCore::idle();
+	while (!SpriteCore::buttonsState()) SpriteCore::idle();
+	while (SpriteCore::buttonsState()) SpriteCore::idle();
+
 
 	sprites_[0] = &score_sprites_;
 	sprites_[1] = &player_bullets_;
@@ -106,12 +120,6 @@ void setup() {
 
 
 void loop() {
-	uint32_t now = micros();
-	while (now - frame_ts_ < 1000000 / 60) {
-		now = micros();
-	}
-	frame_ts_ = now;
-
 	++frame_;
 
 	MaskedXYSprite& player = player_[0];
@@ -335,7 +343,7 @@ void loop() {
 		sprites[0] = &gameover;
 		display(sprites);
 
-		now = micros();
+		uint32_t now = micros();
 		while (micros() < now + 1000000)
 			SpriteCore::idle();
 
@@ -354,11 +362,17 @@ void loop() {
 	else setRGBled(0, 0, 127);
 
 	if (player_impacting_ > 1)
-		SpriteCore::invert(false);
-	if (player_impacting_ == 0)
 		SpriteCore::invert(true);
+	if (player_impacting_ == 0)
+		SpriteCore::invert(false);
 	if (player_impacting_ > 0)
 		--player_impacting_;
+
+	uint32_t now = micros();
+	while (now - frame_ts_ < 1000000 / (45 + score_ / 50)) {
+		now = micros();
+	}
+	frame_ts_ = now;
 
 	display(sprites_);
 }
