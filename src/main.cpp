@@ -85,7 +85,7 @@ void display(const List<MaskedXYSprite>& sprites) {
 
 void display(List<List<MaskedXYSprite>*> sprites) {
 	uint8_t page[128];
-	bool write_display = write_display_ && (millis() - last_frame_) / (1000 / 60);
+	bool write_display = write_display_ && (millis() - last_frame_) / (1000 / 30);
 	if (write_display)
 		last_frame_ = millis();
 	for (int8_t n = 0; n < 8; ++n) {
