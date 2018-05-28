@@ -17,10 +17,10 @@
 #include "MaskedXYSprite.h"
 #include "ShmupSfx.h"
 
-constexpr int kNumPlayerBullets = 6;
-constexpr int kNumPlayerWaves = 3;
-constexpr int kNumEnemies = 10;
-constexpr int kNumBulletsPerEnemy = 4;
+constexpr int8_t kNumPlayerBullets = 6;
+constexpr int8_t kNumPlayerWaves = 3;
+constexpr int8_t kNumEnemies = 10;
+constexpr int8_t kNumBulletsPerEnemy = 4;
 
 struct State {
 ArrayList<MaskedXYSprite, 1> player_;
@@ -71,7 +71,7 @@ uint8_t buttonWait() {
 
 void display(const List<MaskedXYSprite>& sprites) {
 	uint8_t page[128];
-	for (int n = 0; n < 8; ++n) {
+	for (int8_t n = 0; n < 8; ++n) {
 		memset(page, inverted_ ? 0 : 255, 128);
 		for (uint8_t i = 0; i < sprites.size(); ++i) {
 			sprites[i].render(n, page);
@@ -88,7 +88,7 @@ void display(List<List<MaskedXYSprite>*> sprites) {
 	bool write_display = write_display_ && (millis() - last_frame_) / (1000 / 20);
 	if (write_display)
 		last_frame_ = millis();
-	for (int n = 0; n < 8; ++n) {
+	for (int8_t n = 0; n < 8; ++n) {
 		memset(page, inverted_ ? 0 : 255, 128);
 		for (uint8_t i = 0; i < sprites.size(); ++i) {
 			List<MaskedXYSprite> &list = *sprites[i];
@@ -153,7 +153,7 @@ void setHighScore(uint32_t score) {
 
 
 void setup(State& state) {
-	int i = 0;
+	int8_t i = 0;
 	state.sprites_[i++] = &state.health_sprites_;
 	state.sprites_[i++] = &state.score_sprites_;
 	state.sprites_[i++] = &state.player_bullets_;
@@ -613,7 +613,7 @@ void configure() {
 	}
 	bool reset_high_score = false;
 
-	int option = 0;
+	int8_t option = 0;
 	while(true) {
 		memset(buf, 0, 1024);
 		gfx.setCursor(0, 0);
