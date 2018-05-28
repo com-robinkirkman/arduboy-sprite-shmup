@@ -619,6 +619,7 @@ void configure() {
 	case 15: case 30: case 45: case 60: case 75: break;
 	default: base_framerate = 45;
 	}
+	bool reset_high_score = false;
 
 	int option = 0;
 	while(true) {
@@ -629,6 +630,9 @@ void configure() {
 		gfx.setCursor(0, 8);
 		gfx.print(" Framerate:");
 		gfx.print(base_framerate);
+		gfx.setCursor(0, 16);
+		gfx.print(" Clear score:");
+		gfx.print(reset_high_score ? "YES" : "NO");
 		gfx.setCursor(0, option * 8);
 		gfx.print('>');
 		display(sprite);
@@ -636,11 +640,11 @@ void configure() {
 		uint8_t b = buttonWait();
 		if (b == UP_BUTTON) {
 			option -= 1;
-			if (option < 0) option = 1;
+			if (option < 0) option = 2;
 		}
 		if (b == DOWN_BUTTON) {
 			option += 1;
-			if (option > 1) option = 0;
+			if (option > 2) option = 0;
 		}
 		if (option == 0 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
 			sound_enabled = !sound_enabled;
@@ -653,6 +657,9 @@ void configure() {
 			base_framerate += 15;
 			if (base_framerate > 75) base_framerate = 15;
 		}
+		if (option == 2 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
+			reset_high_score = !reset_high_score;
+		}
 		if (b == A_BUTTON)
 			break;
 	}
@@ -660,6 +667,8 @@ void configure() {
 	ShmupSfx::enable(sound_enabled);
 	base_framerate_ = base_framerate;
 	storeConfiguration();
+	if (reset_high_score)
+		setHighScore(0);
 }
 
 void setup() {
@@ -678,9 +687,7 @@ void setup() {
 
 
 	showTitle();
-	if (b == (A_BUTTON | B_BUTTON)) {
-		setHighScore(0);
-	} else if (b == A_BUTTON) {
+	if (b == A_BUTTON) {
 		configure();
 	}
 

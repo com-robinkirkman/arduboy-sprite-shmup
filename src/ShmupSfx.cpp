@@ -29,7 +29,7 @@ void ShmupSfx::tick() {
 void ShmupSfx::bulletFired() {
 	if (state_ > BULLET_FIRED) return;
 	state_ = BULLET_FIRED;
-	tones.tone(500, 10);
+	tones.tone(500, 5);
 }
 void ShmupSfx::waveFired() {
 	if (state_ > WAVE_FIRED) return;
