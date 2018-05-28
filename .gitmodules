@@ -1,6 +1,6 @@
 [submodule "lib/sprite-core"]
 	path = lib/sprite-core
-	url = ../sprite-core/
+	url = git@github.com:com-robinkirkman/arduboy-sprite-core.git
 [submodule "lib/Arduboy"]
 	path = lib/Arduboy
 	url = https://github.com/Arduboy/Arduboy.git
