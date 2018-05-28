@@ -220,7 +220,8 @@ bool loop(State& state) {
 	for (size_t i = 0; i < enemy_bullets_.size(); ++i) {
 		MaskedXYSprite& bullet = enemy_bullets_[i];
 		if (!bullet.active()) continue;
-		bullet.setX(bullet.x() - 2);
+		size_t enemy = i / kNumBulletsPerEnemy;
+		bullet.setX(bullet.x() - (1 + state.enemy_xdelta_[enemy]));
 		if (bullet.x() < 0)
 			bullet.setActive(false);
 	}
@@ -409,7 +410,7 @@ bool loop(State& state) {
 			enemy.setActive(true);
 			enemy_frame_[i] = rand() % 0x3F;
 			enemy_ydelta_[i] = (rand() % 5) - 2;
-			state.enemy_xdelta_[i] = (rand() % 6) / 2 + 1;
+			state.enemy_xdelta_[i] = (rand() % 4) / 2 + 1;
 			break;
 		}
 	}
