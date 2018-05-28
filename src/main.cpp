@@ -53,6 +53,7 @@ int8_t player_impacting_ = 0;
 uint8_t base_framerate_;
 bool write_display_ = false;
 bool inverted_ = false;
+bool play_inverted_ = false;
 
 uint32_t last_frame_ = 0;
 
@@ -495,9 +496,9 @@ bool loop(State& state) {
 	else setRGBled(0, 0, 127);
 
 	if (player_impacting_ > 1)
-		invert(true);
+		invert(play_inverted_);
 	if (player_impacting_ == 0)
-		invert(false);
+		invert(!play_inverted_);
 	if (player_impacting_ > 0)
 		--player_impacting_;
 
@@ -584,11 +585,13 @@ void showTitle() {
 void loadConfiguration() {
 	ShmupSfx::enable(EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 4));
 	base_framerate_ = EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 5);
+	play_inverted_ = EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 6);
 }
 
 void storeConfiguration() {
 	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 4, ShmupSfx::isEnabled());
 	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 5, base_framerate_);
+	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 6, play_inverted_);
 }
 
 void configure() {
@@ -620,6 +623,9 @@ void configure() {
 		gfx.print(" Framerate:");
 		gfx.print(base_framerate);
 		gfx.setCursor(0, 16);
+		gfx.print(" Invert:");
+		gfx.print(play_inverted_ ? "ON" : "OFF");
+		gfx.setCursor(0, 24);
 		gfx.print(" Clear score:");
 		gfx.print(reset_high_score ? "YES" : "NO");
 		gfx.setCursor(0, option * 8);
@@ -629,11 +635,11 @@ void configure() {
 		uint8_t b = buttonWait();
 		if (b == UP_BUTTON) {
 			option -= 1;
-			if (option < 0) option = 2;
+			if (option < 0) option = 3;
 		}
 		if (b == DOWN_BUTTON) {
 			option += 1;
-			if (option > 2) option = 0;
+			if (option > 3) option = 0;
 		}
 		if (option == 0 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
 			sound_enabled = !sound_enabled;
@@ -647,6 +653,9 @@ void configure() {
 			if (base_framerate > 75) base_framerate = 15;
 		}
 		if (option == 2 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
+			play_inverted_ = !play_inverted_;
+		}
+		if (option == 3 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
 			reset_high_score = !reset_high_score;
 		}
 		if (b == A_BUTTON)
