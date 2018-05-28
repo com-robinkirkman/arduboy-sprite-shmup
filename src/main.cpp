@@ -18,7 +18,7 @@
 constexpr int kNumPlayerBullets = 6;
 constexpr int kNumPlayerWaves = 3;
 constexpr int kNumEnemies = 10;
-constexpr int kNumBulletsPerEnemy = 3;
+constexpr int kNumBulletsPerEnemy = 4;
 
 struct State {
 ArrayList<MaskedXYSprite, 1> player_;
@@ -30,6 +30,7 @@ ArrayList<MaskedXYSprite, 1> player_beam_;
 ArrayList<MaskedXYSprite, kNumEnemies> enemy_;
 ArrayList<uint8_t, kNumEnemies> enemy_frame_;
 ArrayList<int8_t, kNumEnemies> enemy_ydelta_;
+ArrayList<uint8_t, kNumEnemies> enemy_xdelta_;
 ArrayList<MaskedXYSprite, kNumEnemies * kNumBulletsPerEnemy> enemy_bullets_;
 
 ArrayList<MaskedXYSprite, 10> health_sprites_;
@@ -175,21 +176,21 @@ bool loop(State& state) {
 		player.setY(player.y() + 1);
 	if ((b & LEFT_BUTTON) && player.x() > 0)
 		player.setX(player.x() - 1);
-	if ((b & RIGHT_BUTTON) && player.x() < 56)
+	if ((b & RIGHT_BUTTON) && player.x() < 88)
 		player.setX(player.x() + 1);
 
 	// Bullet movement
 	for (size_t i = 0; i < player_bullets_.size(); ++i) {
 		MaskedXYSprite& bullet = player_bullets_[i];
 		if (!bullet.active()) continue;
-		bullet.setX(bullet.x() + 1);
+		bullet.setX(bullet.x() + 2);
 		if (bullet.x() >= 128)
 			bullet.setActive(false);
 	}
 	for (size_t i = 0; i < enemy_bullets_.size(); ++i) {
 		MaskedXYSprite& bullet = enemy_bullets_[i];
 		if (!bullet.active()) continue;
-		bullet.setX(bullet.x() - 1);
+		bullet.setX(bullet.x() - 2);
 		if (bullet.x() < 0)
 			bullet.setActive(false);
 	}
@@ -207,8 +208,8 @@ bool loop(State& state) {
 	for (size_t i = 0; i < enemy_.size(); ++i) {
 		MaskedXYSprite& enemy = enemy_[i];
 		if (!enemy.active()) continue;
-		if ((enemy_frame_[i] + frame_) % 0x7) continue;
-		enemy.setX(enemy.x() - 1);
+		if ((enemy_frame_[i] + frame_) % 0x3) continue;
+		enemy.setX(enemy.x() - state.enemy_xdelta_[i]);
 		enemy.setY(enemy.y() + enemy_ydelta_[i]);
 		if (enemy.y() < 0 || enemy.y() > 55) {
 			enemy_ydelta_[i] = -enemy_ydelta_[i];
@@ -342,7 +343,7 @@ bool loop(State& state) {
 			MaskedXYSprite& wave = player_waves_[i];
 			if (wave.active()) continue;
 			wave.setX(player.x());
-			wave.setY(player.y());
+			wave.setY(player.y() - 4);
 			wave.setActive(true);
 			player_wave_ends_[i] = player.x() + 64;
 			wave_countdown_ = 8;
@@ -370,6 +371,7 @@ bool loop(State& state) {
 			enemy.setActive(true);
 			enemy_frame_[i] = rand() % 0x3F;
 			enemy_ydelta_[i] = (rand() % 5) - 2;
+			state.enemy_xdelta_[i] = (rand() % 6) / 2 + 1;
 			break;
 		}
 	}
@@ -378,7 +380,7 @@ bool loop(State& state) {
 	for (size_t i = 0; i < enemy_.size(); ++i) {
 		MaskedXYSprite& enemy = enemy_[i];
 		if (!enemy.active()) continue;
-		if ((frame_ + enemy_frame_[i]) & 0x3F) continue;
+		if ((frame_ + enemy_frame_[i]) % 48) continue;
 		for (size_t j = 0; j < kNumBulletsPerEnemy; ++j) {
 			MaskedXYSprite& bullet = enemy_bullets_[i * kNumBulletsPerEnemy + j];
 			if (bullet.active()) continue;
