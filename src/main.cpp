@@ -73,7 +73,7 @@ void display(const List<MaskedXYSprite>& sprites) {
 	uint8_t page[128];
 	for (int n = 0; n < 8; ++n) {
 		memset(page, inverted_ ? 0 : 255, 128);
-		for (size_t i = 0; i < sprites.size(); ++i) {
+		for (uint8_t i = 0; i < sprites.size(); ++i) {
 			sprites[i].render(n, page);
 		}
 		if (write_display_) {
@@ -90,9 +90,9 @@ void display(List<List<MaskedXYSprite>*> sprites) {
 		last_frame_ = millis();
 	for (int n = 0; n < 8; ++n) {
 		memset(page, inverted_ ? 0 : 255, 128);
-		for (size_t i = 0; i < sprites.size(); ++i) {
+		for (uint8_t i = 0; i < sprites.size(); ++i) {
 			List<MaskedXYSprite> &list = *sprites[i];
-			for (size_t j = 0; j < list.size(); ++j) {
+			for (uint8_t j = 0; j < list.size(); ++j) {
 				list[j].render(n, page);
 			}
 		}
@@ -106,13 +106,13 @@ void display(List<List<MaskedXYSprite>*> sprites) {
 void reset(State& state) {
 	state.player_[0] = MaskedXYSprite(0, 28, ShmupSprites::player, ShmupSprites::playerMask, true);
 
-	for (size_t i = 0; i < state.player_bullets_.size(); ++i)
+	for (uint8_t i = 0; i < state.player_bullets_.size(); ++i)
 		state.player_bullets_[i] = MaskedXYSprite(ShmupSprites::bullet, ShmupSprites::bulletMask);
-	for (size_t i = 0; i < state.player_waves_.size(); ++i)
+	for (uint8_t i = 0; i < state.player_waves_.size(); ++i)
 		state.player_waves_[i] = MaskedXYSprite(ShmupSprites::wave, ShmupSprites::waveMask);
-	for (size_t i = 0; i < state.enemy_.size(); ++i)
+	for (uint8_t i = 0; i < state.enemy_.size(); ++i)
 		state.enemy_[i] = MaskedXYSprite(ShmupSprites::enemy, ShmupSprites::enemyMask);
-	for (size_t i = 0; i < state.enemy_bullets_.size(); ++i)
+	for (uint8_t i = 0; i < state.enemy_bullets_.size(); ++i)
 		state.enemy_bullets_[i] = MaskedXYSprite(ShmupSprites::bullet, ShmupSprites::bulletMask);
 
 	state.player_beam_[0] = {ShmupSprites::beam, ShmupSprites::beamMask};
@@ -211,24 +211,24 @@ bool loop(State& state) {
 		player.setX(player.x() + 1);
 
 	// Bullet movement
-	for (size_t i = 0; i < player_bullets_.size(); ++i) {
+	for (uint8_t i = 0; i < player_bullets_.size(); ++i) {
 		MaskedXYSprite& bullet = player_bullets_[i];
 		if (!bullet.active()) continue;
 		bullet.setX(bullet.x() + 2);
 		if (bullet.x() >= 128)
 			bullet.setActive(false);
 	}
-	for (size_t i = 0; i < enemy_bullets_.size(); ++i) {
+	for (uint8_t i = 0; i < enemy_bullets_.size(); ++i) {
 		MaskedXYSprite& bullet = enemy_bullets_[i];
 		if (!bullet.active()) continue;
-		size_t enemy = i / kNumBulletsPerEnemy;
+		uint8_t enemy = i / kNumBulletsPerEnemy;
 		bullet.setX(bullet.x() - (1 + state.enemy_xdelta_[enemy]));
 		if (bullet.x() < 0)
 			bullet.setActive(false);
 	}
 
 	// Wave movement
-	for (size_t i = 0; i < player_waves_.size(); ++i) {
+	for (uint8_t i = 0; i < player_waves_.size(); ++i) {
 		MaskedXYSprite& wave = player_waves_[i];
 		if (!wave.active()) continue;
 		wave.setX(wave.x() + 1);
@@ -237,7 +237,7 @@ bool loop(State& state) {
 	}
 
 	// Enemy movement
-	for (size_t i = 0; i < enemy_.size(); ++i) {
+	for (uint8_t i = 0; i < enemy_.size(); ++i) {
 		MaskedXYSprite& enemy = enemy_[i];
 		if (!enemy.active()) continue;
 		if ((enemy_frame_[i] + frame_) % 0x3) continue;
@@ -252,11 +252,11 @@ bool loop(State& state) {
 	}
 
 	// Bullet impacts
-	for (size_t i = 0; i < player_bullets_.size(); ++i) {
+	for (uint8_t i = 0; i < player_bullets_.size(); ++i) {
 		MaskedXYSprite& bullet = player_bullets_[i];
 		if (!bullet.active()) continue;
 		bool impact = false;
-		for (size_t j = 0; j < enemy_bullets_.size(); ++j) {
+		for (uint8_t j = 0; j < enemy_bullets_.size(); ++j) {
 			MaskedXYSprite& enemy_bullet = enemy_bullets_[j];
 			if (!enemy_bullet.active()) continue;
 			if (bullet.intersects(enemy_bullet)) {
@@ -266,7 +266,7 @@ bool loop(State& state) {
 				score_ += 1;
 			}
 		}
-		for (size_t j = 0; j < enemy_.size(); ++j) {
+		for (uint8_t j = 0; j < enemy_.size(); ++j) {
 			MaskedXYSprite& enemy = enemy_[j];
 			if (!enemy.active()) continue;
 			if (bullet.intersects(enemy)) {
@@ -281,10 +281,10 @@ bool loop(State& state) {
 	}
 
 	// Wave impacts
-	for (size_t i = 0; i < player_waves_.size(); ++i) {
+	for (uint8_t i = 0; i < player_waves_.size(); ++i) {
 		MaskedXYSprite& wave = player_waves_[i];
 		if (!wave.active()) continue;
-		for (size_t j = 0; j < enemy_bullets_.size(); ++j) {
+		for (uint8_t j = 0; j < enemy_bullets_.size(); ++j) {
 			MaskedXYSprite& enemy_bullet = enemy_bullets_[j];
 			if (!enemy_bullet.active()) continue;
 			if (wave.intersects(enemy_bullet)) {
@@ -293,7 +293,7 @@ bool loop(State& state) {
 				score_ += 1;
 			}
 		}
-		for (size_t j = 0; j < enemy_.size(); ++j) {
+		for (uint8_t j = 0; j < enemy_.size(); ++j) {
 			MaskedXYSprite& enemy = enemy_[j];
 			if (!enemy.active()) continue;
 			if (wave.intersects(enemy)) {
@@ -308,14 +308,14 @@ bool loop(State& state) {
 	// Beam impacts
 	if (player_beam_[0].active()) {
 		MaskedXYSprite& beam = player_beam_[0];
-		for (size_t i = 0; i < player_bullets_.size(); ++i) {
+		for (uint8_t i = 0; i < player_bullets_.size(); ++i) {
 			MaskedXYSprite& bullet = player_bullets_[i];
 			if (!bullet.active()) continue;
 			if (beam.intersects(bullet)) {
 				bullet.setActive(false);
 			}
 		}
-		for (size_t i = 0; i < enemy_bullets_.size(); ++i) {
+		for (uint8_t i = 0; i < enemy_bullets_.size(); ++i) {
 			MaskedXYSprite& bullet = enemy_bullets_[i];
 			if (!bullet.active()) continue;
 			if (beam.intersects(bullet)) {
@@ -324,7 +324,7 @@ bool loop(State& state) {
 				score_ += 1;
 			}
 		}
-		for (size_t i = 0; i < enemy_.size(); ++i) {
+		for (uint8_t i = 0; i < enemy_.size(); ++i) {
 			MaskedXYSprite& enemy = enemy_[i];
 			if (!enemy.active()) continue;
 			if (beam.intersects(enemy)) {
@@ -337,7 +337,7 @@ bool loop(State& state) {
 	}
 
 	// Enemy bullet impacts
-	for (size_t i = 0; i < enemy_bullets_.size(); ++i) {
+	for (uint8_t i = 0; i < enemy_bullets_.size(); ++i) {
 		MaskedXYSprite& bullet = enemy_bullets_[i];
 		if (!bullet.active()) continue;
 		if (bullet.intersects(player)) {
@@ -349,7 +349,7 @@ bool loop(State& state) {
 	}
 
 	// Enemy impacts
-	for (size_t i = 0; i < enemy_.size(); ++i) {
+	for (uint8_t i = 0; i < enemy_.size(); ++i) {
 		MaskedXYSprite& enemy = enemy_[i];
 		if (!enemy.active()) continue;
 		if (enemy.intersects(player)) {
@@ -362,7 +362,7 @@ bool loop(State& state) {
 
 	// Player bullet firing
 	if ((frame_ % 10) == 0) {
-		for (size_t i = 0; i < player_bullets_.size(); ++i) {
+		for (uint8_t i = 0; i < player_bullets_.size(); ++i) {
 			MaskedXYSprite& bullet = player_bullets_[i];
 			if (bullet.active()) continue;
 			bullet.setX(player.x());
@@ -377,7 +377,7 @@ bool loop(State& state) {
 	if (wave_countdown_ > 0)
 		--wave_countdown_;
 	if ((b & A_BUTTON) && !wave_countdown_) {
-		for (size_t i = 0; i < player_waves_.size(); ++i) {
+		for (uint8_t i = 0; i < player_waves_.size(); ++i) {
 			MaskedXYSprite& wave = player_waves_[i];
 			if (wave.active()) continue;
 			wave.setX(player.x());
@@ -403,7 +403,7 @@ bool loop(State& state) {
 
 	// Enemy spawning
 	if ((frame_ % 6) == 0 && (rand() % 3) == 0) {
-		for (size_t i = 0; i < enemy_.size(); ++i) {
+		for (uint8_t i = 0; i < enemy_.size(); ++i) {
 			MaskedXYSprite& enemy = enemy_[i];
 			if (enemy.active()) continue;
 			enemy.setX(119);
@@ -417,11 +417,11 @@ bool loop(State& state) {
 	}
 
 	// Enemy bullet firing
-	for (size_t i = 0; i < enemy_.size(); ++i) {
+	for (uint8_t i = 0; i < enemy_.size(); ++i) {
 		MaskedXYSprite& enemy = enemy_[i];
 		if (!enemy.active()) continue;
 		if ((frame_ + enemy_frame_[i]) % 48) continue;
-		for (size_t j = 0; j < kNumBulletsPerEnemy; ++j) {
+		for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
 			MaskedXYSprite& bullet = enemy_bullets_[i * kNumBulletsPerEnemy + j];
 			if (bullet.active()) continue;
 			bullet.setX(enemy.x());
@@ -436,10 +436,10 @@ bool loop(State& state) {
 	{
 		char buf[health_sprites_.size()];
 		itoa(health_, buf, 10);
-		for (size_t i = 0; i < health_sprites_.size(); ++i) {
+		for (uint8_t i = 0; i < health_sprites_.size(); ++i) {
 			health_sprites_[i] = {};
 		}
-		for (size_t i = 0; i < health_sprites_.size(); ++i) {
+		for (uint8_t i = 0; i < health_sprites_.size(); ++i) {
 			if (!buf[i]) break;
 			const uint8_t *raster = nullptr;
 			switch(buf[i]) {
@@ -463,10 +463,10 @@ bool loop(State& state) {
 	{
 		char buf[score_sprites_.size()];
 		itoa(score_, buf, 10);
-		for (size_t i = 0; i < score_sprites_.size(); ++i) {
+		for (uint8_t i = 0; i < score_sprites_.size(); ++i) {
 			score_sprites_[i] = {};
 		}
-		for (size_t i = 0; i < score_sprites_.size(); ++i) {
+		for (uint8_t i = 0; i < score_sprites_.size(); ++i) {
 			if (!buf[i]) break;
 			const uint8_t *raster = nullptr;
 			switch(buf[i]) {
