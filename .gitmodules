@@ -7,3 +7,6 @@
 [submodule "lib/Adafruit-GFX-Library"]
 	path = lib/Adafruit-GFX-Library
 	url = https://github.com/Adafruit/Adafruit-GFX-Library.git
+[submodule "lib/ArduboyTones"]
+	path = lib/ArduboyTones
+	url = https://github.com/MLXXXp/ArduboyTones.git

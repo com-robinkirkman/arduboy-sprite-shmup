@@ -14,6 +14,7 @@
 
 #include "ShmupSprites.h"
 #include "MaskedXYSprite.h"
+#include "ShmupSfx.h"
 
 constexpr int kNumPlayerBullets = 6;
 constexpr int kNumPlayerWaves = 3;
@@ -47,6 +48,16 @@ int32_t health_ = 0;
 uint32_t score_ = 0;
 int8_t player_impacting_ = 0;
 };
+
+uint8_t base_framerate_;
+
+uint8_t buttonWait() {
+	uint8_t b;
+	while (SpriteCore::buttonsState()) SpriteCore::idle();
+	while (!(b = SpriteCore::buttonsState())) SpriteCore::idle();
+	while (SpriteCore::buttonsState()) SpriteCore::idle();
+	return b;
+}
 
 void display(const List<MaskedXYSprite>& sprites) {
 	uint8_t page[128];
@@ -163,6 +174,7 @@ bool loop(State& state) {
 	uint32_t &score_ = state.score_;
 	int8_t &player_impacting_ = state.player_impacting_;
 
+	ShmupSfx::tick();
 
 	++frame_;
 
@@ -242,6 +254,7 @@ bool loop(State& state) {
 				impact = true;
 				health_ += 10;
 				score_ += 10;
+				ShmupSfx::enemyImpact();
 			}
 		}
 		if (impact) bullet.setActive(false);
@@ -267,6 +280,7 @@ bool loop(State& state) {
 				enemy.setActive(false);
 				health_ += 10;
 				score_ += 10;
+				ShmupSfx::enemyImpact();
 			}
 		}
 	}
@@ -297,6 +311,7 @@ bool loop(State& state) {
 				enemy.setActive(false);
 				health_ += 10;
 				score_ += 10;
+				ShmupSfx::enemyImpact();
 			}
 		}
 	}
@@ -309,6 +324,7 @@ bool loop(State& state) {
 			health_ -= 500;
 			bullet.setActive(false);
 			player_impacting_ = 16;
+			ShmupSfx::playerImpact();
 		}
 	}
 
@@ -320,6 +336,7 @@ bool loop(State& state) {
 			health_ -= 500;
 			enemy.setActive(false);
 			player_impacting_ = 16;
+			ShmupSfx::playerImpact();
 		}
 	}
 
@@ -331,6 +348,7 @@ bool loop(State& state) {
 			bullet.setX(player.x());
 			bullet.setY(player.y());
 			bullet.setActive(true);
+			ShmupSfx::bulletFired();
 			break;
 		}
 	}
@@ -347,6 +365,7 @@ bool loop(State& state) {
 			wave.setActive(true);
 			player_wave_ends_[i] = player.x() + 64;
 			wave_countdown_ = 8;
+			ShmupSfx::waveFired();
 			break;
 		}
 	}
@@ -357,6 +376,7 @@ bool loop(State& state) {
 		player_beam_[0].setY(player.y());
 		player_beam_[0].setActive(true);
 		health_ -= 5;
+		ShmupSfx::beamFired();
 	} else {
 		player_beam_[0].setActive(false);
 	}
@@ -387,6 +407,7 @@ bool loop(State& state) {
 			bullet.setX(enemy.x());
 			bullet.setY(enemy.y());
 			bullet.setActive(true);
+			ShmupSfx::bulletFired();
 			break;
 		}
 	}
@@ -462,7 +483,7 @@ bool loop(State& state) {
 		--player_impacting_;
 
 	uint32_t now = micros();
-	while (now - frame_ts_ < 1000000 / (45 + score_ / 50)) {
+	while (now - frame_ts_ < 1000000 / (base_framerate_ + score_ / 50)) {
 		now = micros();
 	}
 	frame_ts_ = now;
@@ -493,9 +514,7 @@ void showHighScore() {
 	score[0].setActive(true);
 	display(score);
 
-	while (SpriteCore::buttonsState()) SpriteCore::idle();
-	while (!SpriteCore::buttonsState()) SpriteCore::idle();
-	while (SpriteCore::buttonsState()) SpriteCore::idle();
+	buttonWait();
 }
 
 void gameover(uint32_t score) {
@@ -527,25 +546,13 @@ void gameover(uint32_t score) {
 	while (micros() < now + 1000000)
 		SpriteCore::idle();
 
-	while (SpriteCore::buttonsState()) SpriteCore::idle();
-	while (!SpriteCore::buttonsState()) SpriteCore::idle();
-	while (SpriteCore::buttonsState()) SpriteCore::idle();
+	buttonWait();
 
 	if (score > getHighScore())
 		setHighScore(score);
 }
 
-void setup() {
-	SpriteCore::begin();
-	if (SpriteCore::buttonsState() & UP_BUTTON) {
-		SpriteCore::allPixelsOn(true);
-		setRGBled(255, 255, 255);
-		while (true) SpriteCore::idle();
-	}
-	if (SpriteCore::buttonsState() == (A_BUTTON | B_BUTTON)) {
-		setHighScore(0);
-	}
-
+void showTitle() {
 	ArrayList<MaskedXYSprite, 1> shmup;
 	uint8_t buf[1024];
 	memset(buf, 0, sizeof(buf));
@@ -560,15 +567,103 @@ void setup() {
 	shmup[0].setActive(true);
 	display(shmup);
 
-	while (SpriteCore::buttonsState()) SpriteCore::idle();
-	while (!SpriteCore::buttonsState()) SpriteCore::idle();
-	while (SpriteCore::buttonsState()) SpriteCore::idle();
+	if (SpriteCore::buttonsState())
+		while (SpriteCore::buttonsState()) SpriteCore::idle();
+	else
+		buttonWait();
+}
+
+void loadConfiguration() {
+	ShmupSfx::enable(EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 4));
+	base_framerate_ = EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 5);
+}
+
+void storeConfiguration() {
+	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 4, ShmupSfx::isEnabled());
+	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 5, base_framerate_);
+}
+
+void configure() {
+	loadConfiguration();
+
+	uint8_t buf[1024];
+	SpriteGfx gfx(128, 64, buf);
+	gfx.setTextColor(SpriteGfx::kWhite);
+	ArrayList<MaskedXYSprite, 1> sprite;
+	sprite[0] = {Sprite(128, 64, buf, false), {}};
+	sprite[0].setActive(true);
+
+	bool sound_enabled = ShmupSfx::isEnabled();
+	uint8_t base_framerate = base_framerate_;
+	switch(base_framerate) {
+	case 15: case 30: case 45: case 60: case 75: break;
+	default: base_framerate = 45;
+	}
+
+	int option = 0;
+	while(true) {
+		memset(buf, 0, 1024);
+		gfx.setCursor(0, 0);
+		gfx.print(" Sound:");
+		gfx.print(sound_enabled ? "ON" : "OFF");
+		gfx.setCursor(0, 8);
+		gfx.print(" Framerate:");
+		gfx.print(base_framerate);
+		gfx.setCursor(0, option * 8);
+		gfx.print('>');
+		display(sprite);
+
+		uint8_t b = buttonWait();
+		if (b == UP_BUTTON) {
+			option -= 1;
+			if (option < 0) option = 1;
+		}
+		if (b == DOWN_BUTTON) {
+			option += 1;
+			if (option > 1) option = 0;
+		}
+		if (option == 0 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
+			sound_enabled = !sound_enabled;
+		}
+		if (option == 1 && b == LEFT_BUTTON) {
+			base_framerate -= 15;
+			if (base_framerate < 15) base_framerate = 75;
+		}
+		if (option == 1 && b == RIGHT_BUTTON) {
+			base_framerate += 15;
+			if (base_framerate > 75) base_framerate = 15;
+		}
+		if (b == A_BUTTON)
+			break;
+	}
+
+	ShmupSfx::enable(sound_enabled);
+	base_framerate_ = base_framerate;
+	storeConfiguration();
+}
+
+void setup() {
+	SpriteCore::begin();
+	uint8_t b = SpriteCore::buttonsState();
+	if (b & UP_BUTTON) {
+		SpriteCore::allPixelsOn(true);
+		setRGBled(255, 255, 255);
+		while (true) SpriteCore::idle();
+	}
 
 
+	showTitle();
+	if (b == (A_BUTTON | B_BUTTON)) {
+		setHighScore(0);
+	} else if (b == A_BUTTON) {
+		configure();
+	}
+
+	loadConfiguration();
+	showHighScore();
 }
 
 void loop() {
-	showHighScore();
 	uint32_t score = statefulLoop();
 	gameover(score);
 }
