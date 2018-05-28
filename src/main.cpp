@@ -401,7 +401,7 @@ bool loop(State& state) {
 	}
 
 	// Enemy spawning
-	if ((frame_ % 24) == 0) {
+	if ((frame_ % 6) == 0 && (rand() % 3) == 0) {
 		for (size_t i = 0; i < enemy_.size(); ++i) {
 			MaskedXYSprite& enemy = enemy_[i];
 			if (enemy.active()) continue;
@@ -693,6 +693,8 @@ void setup() {
 
 	loadConfiguration();
 	showHighScore();
+
+	randomSeed(micros());
 }
 
 void loop() {
