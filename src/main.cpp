@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <USBAPI.h>
 #include <SpriteCore.h>
 #include <Sprite.h>
 #include <XYSprite.h>
@@ -50,6 +51,14 @@ int8_t player_impacting_ = 0;
 };
 
 uint8_t base_framerate_;
+bool write_display_ = false;
+bool inverted_ = false;
+
+uint32_t last_frame_ = 0;
+
+void invert(bool b) {
+	inverted_ = b;
+}
 
 uint8_t buttonWait() {
 	uint8_t b;
@@ -62,9 +71,12 @@ uint8_t buttonWait() {
 void display(const List<MaskedXYSprite>& sprites) {
 	uint8_t page[128];
 	for (int n = 0; n < 8; ++n) {
-		memset(page, 0, 128);
+		memset(page, inverted_ ? 0 : 255, 128);
 		for (size_t i = 0; i < sprites.size(); ++i) {
 			sprites[i].render(n, page);
+		}
+		if (write_display_) {
+			Serial.write(page, 128);
 		}
 		SPI.transfer(page, 128);
 	}
@@ -72,13 +84,19 @@ void display(const List<MaskedXYSprite>& sprites) {
 
 void display(List<List<MaskedXYSprite>*> sprites) {
 	uint8_t page[128];
+	bool write_display = write_display_ && (millis() - last_frame_) / (1000 / 20);
+	if (write_display)
+		last_frame_ = millis();
 	for (int n = 0; n < 8; ++n) {
-		memset(page, 0, 128);
+		memset(page, inverted_ ? 0 : 255, 128);
 		for (size_t i = 0; i < sprites.size(); ++i) {
 			List<MaskedXYSprite> &list = *sprites[i];
 			for (size_t j = 0; j < list.size(); ++j) {
 				list[j].render(n, page);
 			}
+		}
+		if (write_display) {
+			Serial.write(page, 128);
 		}
 		SPI.transfer(page, 128);
 	}
@@ -145,7 +163,7 @@ void setup(State& state) {
 	state.sprites_[i++] = &state.player_;
 
 	reset(state);
-	SpriteCore::invert(true);
+	invert(false);
 }
 
 bool loop(State& state) {
@@ -476,9 +494,9 @@ bool loop(State& state) {
 	else setRGBled(0, 0, 127);
 
 	if (player_impacting_ > 1)
-		SpriteCore::invert(false);
+		invert(true);
 	if (player_impacting_ == 0)
-		SpriteCore::invert(true);
+		invert(false);
 	if (player_impacting_ > 0)
 		--player_impacting_;
 
@@ -501,7 +519,7 @@ uint32_t statefulLoop() {
 }
 
 void showHighScore() {
-	SpriteCore::invert(false);
+	invert(true);
 	uint8_t buf[1024];
 	memset(buf, 0, 1024);
 	SpriteGfx buf_gfx(128, 64, buf);
@@ -520,7 +538,7 @@ void showHighScore() {
 void gameover(uint32_t score) {
 	setRGBled(0, 0, 0);
 
-	SpriteCore::invert(false);
+	invert(true);
 	uint8_t buf[1024];
 	memset(buf, 0, 1024);
 	SpriteGfx buf_gfx(128, 64, buf);
@@ -584,6 +602,7 @@ void storeConfiguration() {
 }
 
 void configure() {
+	invert(true);
 	loadConfiguration();
 
 	uint8_t buf[1024];
@@ -649,6 +668,11 @@ void setup() {
 		SpriteCore::allPixelsOn(true);
 		setRGBled(255, 255, 255);
 		while (true) SpriteCore::idle();
+	}
+	if (b == DOWN_BUTTON) {
+		Serial.begin(115200);
+		write_display_ = true;
+		b = buttonWait();
 	}
 
 

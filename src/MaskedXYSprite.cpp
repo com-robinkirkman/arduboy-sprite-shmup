@@ -8,18 +8,24 @@
 #include "MaskedXYSprite.h"
 #include "ShmupSprites.h"
 
+extern bool inverted_;
+
 MaskedXYSprite::MaskedXYSprite(int x, int y, const Sprite& sprite, const Sprite& mask, bool active)
 {
-	sprite_ = XYSprite(x, y, Sprite::kOr, sprite);
-	mask_ = XYSprite(x, y, Sprite::kMask, mask);
+	sprite_ = XYSprite(x, y, Sprite::kMask, sprite);
+	mask_ = XYSprite(x, y, Sprite::kOr, mask);
 	active_ = active;
 }
 
 void MaskedXYSprite::render(int page_num, uint8_t *page) const {
 	if (!active_) return;
-	mask_.render(page_num, page);
-	sprite_.render(page_num, page);
-
+	if (!inverted_) {
+		mask_.render(page_num, page);
+		sprite_.render(page_num, page);
+	} else {
+		mask_.render(page_num, page, Sprite::kMask);
+		sprite_.render(page_num, page, Sprite::kOr);
+	}
 }
 
 bool MaskedXYSprite::intersects(const MaskedXYSprite& other) const {
