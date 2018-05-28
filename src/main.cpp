@@ -566,9 +566,9 @@ void showTitle() {
 	gfx.setCursor(19, 32);
 	gfx.print("SHMUP");
 	gfx.setTextSize(1);
-	String hs = "High Score: ";
-	hs += getHighScore();
-	gfx.setCursor(62 - 3 * hs.length(), 56);
+	char hs[22];
+	sprintf(hs, "High Score: %lu", getHighScore());
+	gfx.setCursor(62 - 3 * strlen(hs), 56);
 	gfx.print(hs);
 	shmup[0] = MaskedXYSprite(Sprite(128, 64, buf, false), {});
 	shmup[0].setActive(true);
