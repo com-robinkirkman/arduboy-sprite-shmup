@@ -519,23 +519,6 @@ uint32_t statefulLoop() {
 	return state.score_;
 }
 
-void showHighScore() {
-	invert(true);
-	uint8_t buf[1024];
-	memset(buf, 0, 1024);
-	SpriteGfx buf_gfx(128, 64, buf);
-	buf_gfx.setTextColor(SpriteGfx::kWhite);
-	buf_gfx.print("High Score: ");
-	buf_gfx.print(getHighScore());
-
-	ArrayList<MaskedXYSprite, 1> score;
-	score[0] = {Sprite(128, 64, buf, false), {}};
-	score[0].setActive(true);
-	display(score);
-
-	buttonWait();
-}
-
 void gameover(uint32_t score) {
 	setRGBled(0, 0, 0);
 
@@ -575,15 +558,21 @@ void showTitle() {
 	ArrayList<MaskedXYSprite, 1> shmup;
 	uint8_t buf[1024];
 	memset(buf, 0, sizeof(buf));
-	SpriteGfx buf_gfx(128, 64, buf);
-	buf_gfx.setTextColor(SpriteGfx::kWhite);
-	buf_gfx.setTextSize(3);
-	buf_gfx.setCursor(28, 8);
-	buf_gfx.print("Ardu");
-	buf_gfx.setCursor(19, 32);
-	buf_gfx.print("SHMUP");
+	SpriteGfx gfx(128, 64, buf);
+	gfx.setTextColor(SpriteGfx::kWhite);
+	gfx.setTextSize(3);
+	gfx.setCursor(28, 8);
+	gfx.print("Ardu");
+	gfx.setCursor(19, 32);
+	gfx.print("SHMUP");
+	gfx.setTextSize(1);
+	String hs = "High Score: ";
+	hs += getHighScore();
+	gfx.setCursor(62 - 3 * hs.length(), 56);
+	gfx.print(hs);
 	shmup[0] = MaskedXYSprite(Sprite(128, 64, buf, false), {});
 	shmup[0].setActive(true);
+	invert(true);
 	display(shmup);
 
 	if (SpriteCore::buttonsState())
@@ -686,18 +675,17 @@ void setup() {
 	}
 
 
-	showTitle();
 	if (b == A_BUTTON) {
 		configure();
 	}
 
 	loadConfiguration();
-	showHighScore();
 
 	randomSeed(micros());
 }
 
 void loop() {
+	showTitle();
 	uint32_t score = statefulLoop();
 	gameover(score);
 }
