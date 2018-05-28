@@ -28,6 +28,9 @@ public:
   static const uint8_t EWAVE[];
   static const uint8_t EWAVE_MASK[];
 
+  static const uint8_t BEAM[];
+  static const uint8_t BEAM_MASK[];
+
   static const Sprite player;
   static const Sprite playerMask;
   static const Sprite enemy;
@@ -38,6 +41,8 @@ public:
   static const Sprite waveMask;
   static const Sprite enemyWave;
   static const Sprite enemyWaveMask;
+  static const Sprite beam;
+  static const Sprite beamMask;
 
   static const uint8_t NUM_NEG[];
   static const uint8_t NUM_0[];

@@ -4,3 +4,6 @@
 [submodule "lib/Arduboy"]
 	path = lib/Arduboy
 	url = https://github.com/Arduboy/Arduboy.git
+[submodule "lib/Adafruit-GFX-Library"]
+	path = lib/Adafruit-GFX-Library
+	url = https://github.com/Adafruit/Adafruit-GFX-Library.git

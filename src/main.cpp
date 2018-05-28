@@ -6,9 +6,11 @@
  */
 
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <SpriteCore.h>
 #include <Sprite.h>
 #include <XYSprite.h>
+#include <SpriteGfx.h>
 
 #include "ShmupSprites.h"
 #include "MaskedXYSprite.h"
@@ -18,10 +20,12 @@ constexpr int kNumPlayerWaves = 3;
 constexpr int kNumEnemies = 10;
 constexpr int kNumBulletsPerEnemy = 3;
 
+struct State {
 ArrayList<MaskedXYSprite, 1> player_;
 ArrayList<MaskedXYSprite, kNumPlayerBullets> player_bullets_;
 ArrayList<MaskedXYSprite, kNumPlayerWaves> player_waves_;
 ArrayList<uint8_t, kNumPlayerWaves> player_wave_ends_;
+ArrayList<MaskedXYSprite, 1> player_beam_;
 
 ArrayList<MaskedXYSprite, kNumEnemies> enemy_;
 ArrayList<uint8_t, kNumEnemies> enemy_frame_;
@@ -31,7 +35,7 @@ ArrayList<MaskedXYSprite, kNumEnemies * kNumBulletsPerEnemy> enemy_bullets_;
 ArrayList<MaskedXYSprite, 10> health_sprites_;
 ArrayList<MaskedXYSprite, 10> score_sprites_;
 
-ArrayList<List<MaskedXYSprite>*, 7> sprites_;
+ArrayList<List<MaskedXYSprite>*, 8> sprites_;
 
 uint8_t frame_ = 0;
 uint32_t frame_ts_ = 0;
@@ -41,6 +45,18 @@ uint8_t wave_countdown_ = 0;
 int32_t health_ = 0;
 uint32_t score_ = 0;
 int8_t player_impacting_ = 0;
+};
+
+void display(const List<MaskedXYSprite>& sprites) {
+	uint8_t page[128];
+	for (int n = 0; n < 8; ++n) {
+		memset(page, 0, 128);
+		for (size_t i = 0; i < sprites.size(); ++i) {
+			sprites[i].render(n, page);
+		}
+		SPI.transfer(page, 128);
+	}
+}
 
 void display(List<List<MaskedXYSprite>*> sprites) {
 	uint8_t page[128];
@@ -56,21 +72,23 @@ void display(List<List<MaskedXYSprite>*> sprites) {
 	}
 }
 
-void reset() {
-	player_[0] = MaskedXYSprite(0, 28, ShmupSprites::player, ShmupSprites::playerMask, true);
+void reset(State& state) {
+	state.player_[0] = MaskedXYSprite(0, 28, ShmupSprites::player, ShmupSprites::playerMask, true);
 
-	for (size_t i = 0; i < player_bullets_.size(); ++i)
-		player_bullets_[i] = MaskedXYSprite(ShmupSprites::bullet, ShmupSprites::bulletMask);
-	for (size_t i = 0; i < player_waves_.size(); ++i)
-		player_waves_[i] = MaskedXYSprite(ShmupSprites::wave, ShmupSprites::waveMask);
-	for (size_t i = 0; i < enemy_.size(); ++i)
-		enemy_[i] = MaskedXYSprite(ShmupSprites::enemy, ShmupSprites::enemyMask);
-	for (size_t i = 0; i < enemy_bullets_.size(); ++i)
-		enemy_bullets_[i] = MaskedXYSprite(ShmupSprites::bullet, ShmupSprites::bulletMask);
+	for (size_t i = 0; i < state.player_bullets_.size(); ++i)
+		state.player_bullets_[i] = MaskedXYSprite(ShmupSprites::bullet, ShmupSprites::bulletMask);
+	for (size_t i = 0; i < state.player_waves_.size(); ++i)
+		state.player_waves_[i] = MaskedXYSprite(ShmupSprites::wave, ShmupSprites::waveMask);
+	for (size_t i = 0; i < state.enemy_.size(); ++i)
+		state.enemy_[i] = MaskedXYSprite(ShmupSprites::enemy, ShmupSprites::enemyMask);
+	for (size_t i = 0; i < state.enemy_bullets_.size(); ++i)
+		state.enemy_bullets_[i] = MaskedXYSprite(ShmupSprites::bullet, ShmupSprites::bulletMask);
 
-	health_ = 0;
-	score_ = 0;
-	player_impacting_ = 0;
+	state.player_beam_[0] = {ShmupSprites::beam, ShmupSprites::beamMask};
+
+	state.health_ = 500;
+	state.score_ = 0;
+	state.player_impacting_ = 0;
 }
 
 void setRGBled(uint8_t red, uint8_t green, uint8_t blue)
@@ -86,45 +104,65 @@ void setRGBled(uint8_t red, uint8_t green, uint8_t blue)
 #endif
 }
 
+uint32_t getHighScore() {
+	uint32_t score = 0;
+	score |= EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 0); score <<= 8;
+	score |= EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 1); score <<= 8;
+	score |= EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 2); score <<= 8;
+	score |= EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 3);
+	return score;
+}
 
-void setup() {
-	SpriteCore::begin();
-	if (SpriteCore::buttonsState() && UP_BUTTON) {
-		SpriteCore::allPixelsOn(true);
-		setRGBled(255, 255, 255);
-		while (true) SpriteCore::idle();
-	}
-
-	ArrayList<MaskedXYSprite, 9> gameover;
-	char buf[] = "ArduSHMUP";
-	for (int i = 0; i < 9; ++i) {
-		gameover[i] = MaskedXYSprite(Sprite(buf[i]), {});
-		gameover[i].setX(i * 6);
-		gameover[i].setActive(true);
-	}
-	ArrayList<List<MaskedXYSprite>*, 1> sprites;
-	sprites[0] = &gameover;
-	display(sprites);
-
-	while (SpriteCore::buttonsState()) SpriteCore::idle();
-	while (!SpriteCore::buttonsState()) SpriteCore::idle();
-	while (SpriteCore::buttonsState()) SpriteCore::idle();
-
-
-	int i = 0;
-	sprites_[i++] = &health_sprites_;
-	sprites_[i++] = &score_sprites_;
-	sprites_[i++] = &player_bullets_;
-	sprites_[i++] = &enemy_bullets_;
-	sprites_[i++] = &player_waves_;
-	sprites_[i++] = &enemy_;
-	sprites_[i++] = &player_;
-
-	reset();
+void setHighScore(uint32_t score) {
+	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 0, score >> 24);
+	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 1, score >> 16);
+	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 2, score >> 8);
+	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 3, score);
 }
 
 
-void loop() {
+void setup(State& state) {
+	int i = 0;
+	state.sprites_[i++] = &state.health_sprites_;
+	state.sprites_[i++] = &state.score_sprites_;
+	state.sprites_[i++] = &state.player_bullets_;
+	state.sprites_[i++] = &state.enemy_bullets_;
+	state.sprites_[i++] = &state.player_waves_;
+	state.sprites_[i++] = &state.enemy_;
+	state.sprites_[i++] = &state.player_beam_;
+	state.sprites_[i++] = &state.player_;
+
+	reset(state);
+	SpriteCore::invert(true);
+}
+
+bool loop(State& state) {
+	ArrayList<MaskedXYSprite, 1> &player_ = state.player_;
+	ArrayList<MaskedXYSprite, kNumPlayerBullets> &player_bullets_ = state.player_bullets_;
+	ArrayList<MaskedXYSprite, kNumPlayerWaves> &player_waves_ = state.player_waves_;
+	ArrayList<uint8_t, kNumPlayerWaves> &player_wave_ends_ = state.player_wave_ends_;
+	ArrayList<MaskedXYSprite, 1> &player_beam_ = state.player_beam_;
+
+	ArrayList<MaskedXYSprite, kNumEnemies> &enemy_ = state.enemy_;
+	ArrayList<uint8_t, kNumEnemies> &enemy_frame_ = state.enemy_frame_;
+	ArrayList<int8_t, kNumEnemies> &enemy_ydelta_ = state.enemy_ydelta_;
+	ArrayList<MaskedXYSprite, kNumEnemies * kNumBulletsPerEnemy> &enemy_bullets_ = state.enemy_bullets_;
+
+	ArrayList<MaskedXYSprite, 10> &health_sprites_ = state.health_sprites_;
+	ArrayList<MaskedXYSprite, 10> &score_sprites_ = state.score_sprites_;
+
+	ArrayList<List<MaskedXYSprite>*, 8> &sprites_ = state.sprites_;
+
+	uint8_t &frame_ = state.frame_;
+	uint32_t &frame_ts_ = state.frame_ts_;
+
+	uint8_t &wave_countdown_ = state.wave_countdown_;
+
+	int32_t &health_ = state.health_;
+	uint32_t &score_ = state.score_;
+	int8_t &player_impacting_ = state.player_impacting_;
+
+
 	++frame_;
 
 	MaskedXYSprite& player = player_[0];
@@ -232,6 +270,36 @@ void loop() {
 		}
 	}
 
+	// Beam impacts
+	if (player_beam_[0].active()) {
+		MaskedXYSprite& beam = player_beam_[0];
+		for (size_t i = 0; i < player_bullets_.size(); ++i) {
+			MaskedXYSprite& bullet = player_bullets_[i];
+			if (!bullet.active()) continue;
+			if (beam.intersects(bullet)) {
+				bullet.setActive(false);
+			}
+		}
+		for (size_t i = 0; i < enemy_bullets_.size(); ++i) {
+			MaskedXYSprite& bullet = enemy_bullets_[i];
+			if (!bullet.active()) continue;
+			if (beam.intersects(bullet)) {
+				bullet.setActive(false);
+				health_ += 1;
+				score_ += 1;
+			}
+		}
+		for (size_t i = 0; i < enemy_.size(); ++i) {
+			MaskedXYSprite& enemy = enemy_[i];
+			if (!enemy.active()) continue;
+			if (beam.intersects(enemy)) {
+				enemy.setActive(false);
+				health_ += 10;
+				score_ += 10;
+			}
+		}
+	}
+
 	// Enemy bullet impacts
 	for (size_t i = 0; i < enemy_bullets_.size(); ++i) {
 		MaskedXYSprite& bullet = enemy_bullets_[i];
@@ -282,6 +350,16 @@ void loop() {
 		}
 	}
 
+	// Player beam firing
+	if ((b & B_BUTTON) && health_ > 5) {
+		player_beam_[0].setX(player.x() + 8);
+		player_beam_[0].setY(player.y());
+		player_beam_[0].setActive(true);
+		health_ -= 5;
+	} else {
+		player_beam_[0].setActive(false);
+	}
+
 	// Enemy spawning
 	if ((frame_ % 24) == 0) {
 		for (size_t i = 0; i < enemy_.size(); ++i) {
@@ -314,7 +392,7 @@ void loop() {
 	// Update health
 	{
 		char buf[health_sprites_.size()];
-		itoa(health_ + 500, buf, 10);
+		itoa(health_, buf, 10);
 		for (size_t i = 0; i < health_sprites_.size(); ++i) {
 			health_sprites_[i] = {};
 		}
@@ -365,43 +443,19 @@ void loop() {
 		}
 	}
 
-	if (health_ < -500) {
-		setRGBled(0, 0, 0);
-		SpriteCore::invert(false);
-
-		ArrayList<MaskedXYSprite, 9> gameover;
-		char buf[] = "game over";
-		for (int i = 0; i < 9; ++i) {
-			gameover[i] = MaskedXYSprite(Sprite(buf[i]), {});
-			gameover[i].setX(i * 6);
-			gameover[i].setActive(true);
-		}
-		ArrayList<List<MaskedXYSprite>*, 2> sprites;
-		sprites[0] = &gameover;
-		sprites[1] = &score_sprites_;
-		display(sprites);
-
-		uint32_t now = micros();
-		while (micros() < now + 1000000)
-			SpriteCore::idle();
-
-		while (SpriteCore::buttonsState()) SpriteCore::idle();
-		while (!SpriteCore::buttonsState()) SpriteCore::idle();
-		while (SpriteCore::buttonsState()) SpriteCore::idle();
-
-		reset();
-		return;
+	if (health_ < 0) {
+		return false;
 	}
 
-	if (health_ < 0) setRGBled(frame_ & 16 ? 127 : 0, 0, 0);
-	else if (health_ < 500) setRGBled(127, 127, 0);
-	else if (health_ < 1000) setRGBled(0, 127, 0);
+	if (health_ < 500) setRGBled(frame_ & 16 ? 127 : 0, 0, 0);
+	else if (health_ < 1000) setRGBled(127, 127, 0);
+	else if (health_ < 1500) setRGBled(0, 127, 0);
 	else setRGBled(0, 0, 127);
 
 	if (player_impacting_ > 1)
-		SpriteCore::invert(true);
-	if (player_impacting_ == 0)
 		SpriteCore::invert(false);
+	if (player_impacting_ == 0)
+		SpriteCore::invert(true);
 	if (player_impacting_ > 0)
 		--player_impacting_;
 
@@ -412,4 +466,107 @@ void loop() {
 	frame_ts_ = now;
 
 	display(sprites_);
+
+	return true;
+}
+
+uint32_t statefulLoop() {
+	State state;
+	setup(state);
+	while(loop(state));
+	return state.score_;
+}
+
+void showHighScore() {
+	SpriteCore::invert(false);
+	uint8_t buf[1024];
+	memset(buf, 0, 1024);
+	SpriteGfx buf_gfx(128, 64, buf);
+	buf_gfx.setTextColor(SpriteGfx::kWhite);
+	buf_gfx.print("High Score: ");
+	buf_gfx.print(getHighScore());
+
+	ArrayList<MaskedXYSprite, 1> score;
+	score[0] = {Sprite(128, 64, buf, false), {}};
+	score[0].setActive(true);
+	display(score);
+
+	while (SpriteCore::buttonsState()) SpriteCore::idle();
+	while (!SpriteCore::buttonsState()) SpriteCore::idle();
+	while (SpriteCore::buttonsState()) SpriteCore::idle();
+}
+
+void gameover(uint32_t score) {
+	setRGBled(0, 0, 0);
+
+	SpriteCore::invert(false);
+	uint8_t buf[1024];
+	memset(buf, 0, 1024);
+	SpriteGfx buf_gfx(128, 64, buf);
+	buf_gfx.setTextColor(SpriteGfx::kWhite);
+	buf_gfx.print("Game Over");
+	buf_gfx.setCursor(0, 16);
+	buf_gfx.print("Score: ");
+	buf_gfx.print(score);
+	buf_gfx.setCursor(0, 32);
+	buf_gfx.print("High Score: ");
+	buf_gfx.print(getHighScore());
+	if (score > getHighScore()) {
+		buf_gfx.setCursor(0, 48);
+		buf_gfx.print("NEW HIGH SCORE");
+	}
+
+	ArrayList<MaskedXYSprite, 1> sprite;
+	sprite[0] = {Sprite(128, 64, buf, false), {}};
+	sprite[0].setActive(true);
+	display(sprite);
+
+	uint32_t now = micros();
+	while (micros() < now + 1000000)
+		SpriteCore::idle();
+
+	while (SpriteCore::buttonsState()) SpriteCore::idle();
+	while (!SpriteCore::buttonsState()) SpriteCore::idle();
+	while (SpriteCore::buttonsState()) SpriteCore::idle();
+
+	if (score > getHighScore())
+		setHighScore(score);
+}
+
+void setup() {
+	SpriteCore::begin();
+	if (SpriteCore::buttonsState() & UP_BUTTON) {
+		SpriteCore::allPixelsOn(true);
+		setRGBled(255, 255, 255);
+		while (true) SpriteCore::idle();
+	}
+	if (SpriteCore::buttonsState() == (A_BUTTON | B_BUTTON)) {
+		setHighScore(0);
+	}
+
+	ArrayList<MaskedXYSprite, 1> shmup;
+	uint8_t buf[1024];
+	memset(buf, 0, sizeof(buf));
+	SpriteGfx buf_gfx(128, 64, buf);
+	buf_gfx.setTextColor(SpriteGfx::kWhite);
+	buf_gfx.setTextSize(3);
+	buf_gfx.setCursor(28, 8);
+	buf_gfx.print("Ardu");
+	buf_gfx.setCursor(19, 32);
+	buf_gfx.print("SHMUP");
+	shmup[0] = MaskedXYSprite(Sprite(128, 64, buf, false), {});
+	shmup[0].setActive(true);
+	display(shmup);
+
+	while (SpriteCore::buttonsState()) SpriteCore::idle();
+	while (!SpriteCore::buttonsState()) SpriteCore::idle();
+	while (SpriteCore::buttonsState()) SpriteCore::idle();
+
+
+}
+
+void loop() {
+	showHighScore();
+	uint32_t score = statefulLoop();
+	gameover(score);
 }
