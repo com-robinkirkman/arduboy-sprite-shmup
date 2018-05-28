@@ -85,7 +85,7 @@ void display(const List<MaskedXYSprite>& sprites) {
 
 void display(List<List<MaskedXYSprite>*> sprites) {
 	uint8_t page[128];
-	bool write_display = write_display_ && (millis() - last_frame_) / (1000 / 20);
+	bool write_display = write_display_ && (millis() - last_frame_) / (1000 / 60);
 	if (write_display)
 		last_frame_ = millis();
 	for (int8_t n = 0; n < 8; ++n) {
@@ -678,7 +678,7 @@ void setup() {
 		while (true) SpriteCore::idle();
 	}
 	if (b == DOWN_BUTTON) {
-		Serial.begin(115200);
+		Serial.begin(1000000);
 		write_display_ = true;
 		b = buttonWait();
 	}
