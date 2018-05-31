@@ -574,16 +574,16 @@ void showTitle() {
 	memset(buf, 0, sizeof(buf));
 	SpriteGfx gfx(128, 64, buf);
 	gfx.setTextColor(SpriteGfx::kWhite);
+	char hs[22];
+	memcpy(hs, "High Score: ", 11);
+	itoa(getHighScore(), hs + 11, 10);
+	gfx.setCursor((128 - 6 * strlen(hs)) / 2, 56);
+	gfx.print(hs);
 	gfx.setTextSize(3);
 	gfx.setCursor(28, 8);
 	gfx.print("Ardu");
 	gfx.setCursor(19, 32);
 	gfx.print("SHMUP");
-	gfx.setTextSize(1);
-	char hs[22];
-	sprintf(hs, "High Score: %lu", getHighScore());
-	gfx.setCursor(62 - 3 * strlen(hs), 56);
-	gfx.print(hs);
 	MaskedXYSprite shmup(Sprite(128, 64, buf, false), {});
 	shmup.setActive(true);
 	invert(true);
@@ -690,7 +690,7 @@ void setup() {
 		while (true) SpriteCore::idle();
 	}
 	if (b == DOWN_BUTTON) {
-		Serial.begin(1000000);
+		Serial.begin(4000000);
 		write_display_ = true;
 		b = buttonWait();
 	}
