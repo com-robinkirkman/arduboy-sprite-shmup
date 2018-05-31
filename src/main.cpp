@@ -119,6 +119,16 @@ void reset(State& state) {
 
 	state.player_beam_[0] = {ShmupSprites::beam, ShmupSprites::beamMask};
 
+	for (uint8_t i = 0; i < state.health_sprites_.size(); ++i) {
+		state.health_sprites_[i].setX(4 * i + 1);
+		state.health_sprites_[i].setY(55);
+	}
+
+	for (uint8_t i = 0; i < state.score_sprites_.size(); ++i) {
+		state.score_sprites_[i].setX(128 - 4 * state.score_sprites_.size() + 4 * i);
+		state.score_sprites_[i].setY(55);
+	}
+
 	state.health_ = 500;
 	state.score_ = 0;
 	state.player_impacting_ = 0;
@@ -457,7 +467,8 @@ bool loop(State& state) {
 			case '8': raster = ShmupSprites::NUM_8; break;
 			case '9': raster = ShmupSprites::NUM_9; break;
 			}
-			health_sprites_[i] = MaskedXYSprite(4 * i + 1, 55, Sprite(4, 6, raster, true), {}, true);
+			health_sprites_[i].setActive(true);
+			health_sprites_[i].sprite().setSprite(Sprite(4, 6, raster, true));
 		}
 	}
 
@@ -468,10 +479,11 @@ bool loop(State& state) {
 		for (uint8_t i = 0; i < score_sprites_.size(); ++i) {
 			score_sprites_[i].setActive(false);
 		}
-		for (uint8_t i = 0; i < score_sprites_.size(); ++i) {
-			if (!buf[i]) break;
+		int skip = score_sprites_.size() - strlen(buf);
+		for (uint8_t i = skip; i < score_sprites_.size(); ++i) {
+			if (!buf[i - skip]) break;
 			const uint8_t *raster = nullptr;
-			switch(buf[i]) {
+			switch(buf[i - skip]) {
 			case '-': raster = ShmupSprites::NUM_NEG; break;
 			case '0': raster = ShmupSprites::NUM_0; break;
 			case '1': raster = ShmupSprites::NUM_1; break;
@@ -484,7 +496,8 @@ bool loop(State& state) {
 			case '8': raster = ShmupSprites::NUM_8; break;
 			case '9': raster = ShmupSprites::NUM_9; break;
 			}
-			score_sprites_[i] = MaskedXYSprite(128 - 4 * strlen(buf) + 4 * i, 55, Sprite(4, 6, raster, true), {}, true);
+			score_sprites_[i].setActive(true);
+			score_sprites_[i].sprite().setSprite(Sprite(4, 6, raster, true));
 		}
 	}
 

@@ -20,14 +20,18 @@ public:
 
 	bool intersects(const MaskedXYSprite& other) const;
 
-	bool active() const { return active_; }
-	void setActive(bool active) { active_ = active; }
+	inline bool active() const { return active_; }
+	inline void setActive(bool active) { active_ = active; }
 
-	int x() const { return sprite_.x(); }
-	void setX(int x) { sprite_.setX(x); mask_.setX(x); }
+	inline int x() const { return sprite_.x(); }
+	inline void setX(int x) { sprite_.setX(x); mask_.setX(x); }
 
-	int y() const { return sprite_.y(); }
-	void setY(int y) { sprite_.setY(y); mask_.setY(y); }
+	inline int y() const { return sprite_.y(); }
+	inline void setY(int y) { sprite_.setY(y); mask_.setY(y); }
+
+	inline XYSprite& sprite() { return sprite_; }
+
+	inline XYSprite& mask() { return mask_; }
 
 private:
 	bool active_;
