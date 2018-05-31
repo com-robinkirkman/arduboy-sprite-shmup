@@ -133,7 +133,7 @@ void reset(State& state) {
 		state.score_sprites_[i].setY(55);
 	}
 
-	state.health_ = 500;
+	state.health_ = 1500;
 	state.score_ = 0;
 	state.player_impacting_ = 0;
 }
@@ -322,9 +322,10 @@ bool loop(State& state) {
 		MaskedXYSprite& bullet = state.enemy_bullets_[i];
 		if (!bullet.active()) continue;
 		if (bullet.intersects(player)) {
-			state.health_ -= 500;
+			if (!state.player_impacting_)
+				state.health_ -= 500;
 			bullet.setActive(false);
-			state.player_impacting_ = 16;
+			state.player_impacting_ = base_framerate_;
 			ShmupSfx::playerImpact();
 		}
 	}
@@ -334,9 +335,10 @@ bool loop(State& state) {
 		MaskedXYSprite& enemy = state.enemy_[i];
 		if (!enemy.active()) continue;
 		if (enemy.intersects(player)) {
-			state.health_ -= 500;
+			if (!state.player_impacting_)
+				state.health_ -= 500;
 			enemy.setActive(false);
-			state.player_impacting_ = 16;
+			state.player_impacting_ = base_framerate_;
 			ShmupSfx::playerImpact();
 		}
 	}
