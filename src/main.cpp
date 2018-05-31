@@ -383,8 +383,8 @@ bool loop(State& state) {
 	}
 
 	// Enemy spawning
-	if ((rand() % 10) == 0) {
-		for (uint8_t i = 0; i < kNumEnemies; ++i) {
+	if ((rand() % 8) == 0) {
+		for (uint8_t i = 0; i < kNumEnemies && i < 3 + state.score_ / 300; ++i) {
 			MaskedXYSprite& enemy = state.enemy_[i];
 			if (enemy.active()) continue;
 			enemy.setX(119);
@@ -402,7 +402,7 @@ bool loop(State& state) {
 		MaskedXYSprite& enemy = state.enemy_[i];
 		if (!enemy.active()) continue;
 		if ((state.frame_ + state.enemy_frame_[i]) % 16) continue;
-		if (rand() % 3) continue;
+		if (rand() % 4) continue;
 		for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
 			MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
 			if (bullet.active()) continue;
@@ -497,7 +497,7 @@ bool loop(State& state) {
 		--state.player_impacting_;
 
 	uint32_t now = micros();
-	while (now - state.frame_ts_ < 1000000 / (base_framerate_ + state.score_ / 50)) {
+	while (now - state.frame_ts_ < 1000000 / (base_framerate_ + state.score_ / 100)) {
 		now = micros();
 	}
 	state.frame_ts_ = now;
