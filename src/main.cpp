@@ -11,7 +11,6 @@
 #include <SpriteCore.h>
 #include <Sprite.h>
 #include <XYSprite.h>
-#include <SpriteGfx.h>
 
 #include "ShmupSprites.h"
 #include "MaskedXYSprite.h"
@@ -50,6 +49,16 @@ int16_t health_ = 0;
 uint16_t score_ = 0;
 int8_t player_impacting_ = 0;
 };
+
+void print(const char *s, int x, int y, uint8_t *buf) {
+	for(char c = *s; c; c = *++s) {
+		XYSprite sprite(x, y, Sprite::kOr, Sprite(c));
+		for (uint8_t n = 0; n < 8; ++n) {
+			sprite.render(n, buf + 128 * n);
+		}
+		x += 6;
+	}
+}
 
 uint8_t base_framerate_;
 bool write_display_ = false;
@@ -541,18 +550,16 @@ void gameover(uint32_t score) {
 	invert(true);
 	uint8_t buf[1024];
 	memset(buf, 0, 1024);
-	SpriteGfx buf_gfx(128, 64, buf);
-	buf_gfx.setTextColor(SpriteGfx::kWhite);
-	buf_gfx.print("Game Over");
-	buf_gfx.setCursor(0, 16);
-	buf_gfx.print("Score: ");
-	buf_gfx.print(score);
-	buf_gfx.setCursor(0, 32);
-	buf_gfx.print("High Score: ");
-	buf_gfx.print(getHighScore());
+	print("Game Over", 0, 0, buf);
+	print("Score: ", 0, 16, buf);
+	char sbuf[12];
+	itoa(score, sbuf, 10);
+	print(sbuf, 6*6, 16, buf);
+	print("High Score: ", 0, 32, buf);
+	itoa(getHighScore(), sbuf, 10);
+	print(sbuf, 12*6, 32, buf);
 	if (score > getHighScore()) {
-		buf_gfx.setCursor(0, 48);
-		buf_gfx.print("NEW HIGH SCORE");
+		print("NEW HIGH SCORE", 0, 48, buf);
 	}
 
 	MaskedXYSprite sprite = {Sprite(128, 64, buf, false), {}};
@@ -572,18 +579,11 @@ void gameover(uint32_t score) {
 void showTitle() {
 	uint8_t buf[1024];
 	memset(buf, 0, sizeof(buf));
-	SpriteGfx gfx(128, 64, buf);
-	gfx.setTextColor(SpriteGfx::kWhite);
 	char hs[22];
 	memcpy(hs, "High Score: ", 11);
 	itoa(getHighScore(), hs + 11, 10);
-	gfx.setCursor((128 - 6 * strlen(hs)) / 2, 56);
-	gfx.print(hs);
-	gfx.setTextSize(3);
-	gfx.setCursor(28, 8);
-	gfx.print("Ardu");
-	gfx.setCursor(19, 32);
-	gfx.print("SHMUP");
+	print(hs, (128 - 6 * strlen(hs)) / 2, 56, buf);
+	print("ArduSHMUP", (128-6*9)/2, 0, buf);
 	MaskedXYSprite shmup(Sprite(128, 64, buf, false), {});
 	shmup.setActive(true);
 	invert(true);
@@ -612,8 +612,6 @@ void configure() {
 	loadConfiguration();
 
 	uint8_t buf[1024];
-	SpriteGfx gfx(128, 64, buf);
-	gfx.setTextColor(SpriteGfx::kWhite);
 	MaskedXYSprite sprite = {Sprite(128, 64, buf, false), {}};
 	sprite.setActive(true);
 
@@ -628,20 +626,17 @@ void configure() {
 	int8_t option = 0;
 	while(true) {
 		memset(buf, 0, 1024);
-		gfx.setCursor(0, 0);
-		gfx.print(" Sound:");
-		gfx.print(sound_enabled ? "ON" : "OFF");
-		gfx.setCursor(0, 8);
-		gfx.print(" Framerate:");
-		gfx.print(base_framerate);
-		gfx.setCursor(0, 16);
-		gfx.print(" Invert:");
-		gfx.print(play_inverted_ ? "ON" : "OFF");
-		gfx.setCursor(0, 24);
-		gfx.print(" Clear score:");
-		gfx.print(reset_high_score ? "YES" : "NO");
-		gfx.setCursor(0, option * 8);
-		gfx.print('>');
+		print(" Sound:", 0, 0, buf);
+		print(sound_enabled ? "ON" : "OFF", 7*6, 0, buf);
+		print(" Framerate:", 0, 8, buf);
+		char ibuf[4];
+		itoa(base_framerate, ibuf, 10);
+		print(ibuf, 11*6, 8, buf);
+		print(" Invert:", 0, 16, buf);
+		print(play_inverted_ ? "ON" : "OFF", 8*6, 16, buf);
+		print(" Clear score:", 0, 24, buf);
+		print(reset_high_score ? "YES" : "NO", 13*6, 24, buf);
+		print(">", 0, option * 8, buf);
 		display(&sprite, 1);
 
 		uint8_t b = buttonWait();

@@ -43,12 +43,12 @@ const uint8_t ShmupSprites::PLAYER_MASK[] PROGMEM = {
 
 const uint8_t ShmupSprites::ENEMY[] PROGMEM = {
     0b00011000,
-    0b00111100,
-    0b10111101,
-    0b10111101,
-    0b11111111,
-    0b11111111,
-    0b11111111,
+    0b00100100,
+    0b10100101,
+    0b10100101,
+    0b11000011,
+    0b10000001,
+    0b11100111,
     0b00011000, };
 
 const uint8_t ShmupSprites::ENEMY_MASK[] PROGMEM = {
