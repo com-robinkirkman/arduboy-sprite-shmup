@@ -18,8 +18,8 @@
 
 constexpr uint8_t kNumPlayerBullets = 6;
 constexpr uint8_t kNumPlayerWaves = 3;
-constexpr uint8_t kNumEnemies = 16;
-constexpr uint8_t kNumBulletsPerEnemy = 2;
+constexpr uint8_t kNumEnemies = 15;
+constexpr uint8_t kNumBulletsPerEnemy = 4;
 constexpr uint8_t kNumEnemyBullets = kNumEnemies * kNumBulletsPerEnemy;
 constexpr int kNumHealthSprites = 10;
 constexpr int kNumScoreSprites = 10;
@@ -386,7 +386,7 @@ bool loop(State& state) {
 
 	// Enemy spawning
 	if ((rand() % 8) == 0) {
-		for (uint8_t i = 0; i < kNumEnemies && i < 3 + state.score_ / 500; ++i) {
+		for (uint8_t i = 0; i < kNumEnemies && i < 3 + state.score_ / 400; ++i) {
 			MaskedXYSprite& enemy = state.enemy_[i];
 			if (enemy.active()) continue;
 			enemy.setX(119);
@@ -449,7 +449,7 @@ bool loop(State& state) {
 			case '9': raster = ShmupSprites::NUM_9; break;
 			}
 			state.health_sprites_[i].setActive(true);
-			state.health_sprites_[i].sprite().setSprite(Sprite(4, 6, raster, true));
+			state.health_sprites_[i].sprite() = Sprite(4, 6, raster, true);
 		}
 	}
 
@@ -478,7 +478,7 @@ bool loop(State& state) {
 			case '9': raster = ShmupSprites::NUM_9; break;
 			}
 			state.score_sprites_[i].setActive(true);
-			state.score_sprites_[i].sprite().setSprite(Sprite(4, 6, raster, true));
+			state.score_sprites_[i].sprite() = Sprite(4, 6, raster, true);
 		}
 	}
 

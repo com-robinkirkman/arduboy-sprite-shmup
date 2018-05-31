@@ -23,19 +23,20 @@ public:
 	inline bool active() const { return active_; }
 	inline void setActive(bool active) { active_ = active; }
 
-	inline int x() const { return sprite_.x(); }
-	inline void setX(int x) { sprite_.setX(x); mask_.setX(x); }
+	inline int x() const { return x_; }
+	inline void setX(int x) { x_ = x; }
 
-	inline int y() const { return sprite_.y(); }
-	inline void setY(int y) { sprite_.setY(y); mask_.setY(y); }
+	inline int y() const { return y_; }
+	inline void setY(int y) { y_ = y; }
 
-	inline XYSprite& sprite() { return sprite_; }
+	inline Sprite& sprite() { return sprite_; }
 
-	inline XYSprite& mask() { return mask_; }
+	inline Sprite& mask() { return mask_; }
 
 private:
 	bool active_;
-	XYSprite sprite_, mask_;
+	int x_, y_;
+	Sprite sprite_, mask_;
 };
 
 #endif /* SRC_MASKEDXYSPRITE_H_ */
