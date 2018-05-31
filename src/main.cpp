@@ -222,13 +222,6 @@ bool loop(State& state) {
 	if ((b & RIGHT_BUTTON) && player.x() < 88)
 		player.setX(player.x() + 1);
 
-	if (b == (LEFT_BUTTON | RIGHT_BUTTON)) {
-		while (SpriteCore::buttonsState()) SpriteCore::idle();
-		while (SpriteCore::buttonsState() != (LEFT_BUTTON | RIGHT_BUTTON)) SpriteCore::idle();
-		while (SpriteCore::buttonsState()) SpriteCore::idle();
-		return true;
-	}
-
 	// Bullet movement
 	for (uint8_t i = 0; i < kNumPlayerBullets; ++i) {
 		MaskedXYSprite& bullet = player_bullets_[i];
