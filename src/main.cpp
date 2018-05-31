@@ -42,7 +42,7 @@ ArrayList<MaskedXYSprite, 10> score_sprites_;
 ArrayList<List<MaskedXYSprite>*, 8> sprites_;
 
 uint8_t frame_ = 0;
-uint16_t frame_ts_ = 0;
+uint32_t frame_ts_ = 0;
 
 uint8_t wave_countdown_ = 0;
 
@@ -197,7 +197,7 @@ bool loop(State& state) {
 	ArrayList<List<MaskedXYSprite>*, 8> &sprites_ = state.sprites_;
 
 	uint8_t &frame_ = state.frame_;
-	uint16_t &frame_ts_ = state.frame_ts_;
+	uint32_t &frame_ts_ = state.frame_ts_;
 
 	uint8_t &wave_countdown_ = state.wave_countdown_;
 
@@ -221,6 +221,13 @@ bool loop(State& state) {
 		player.setX(player.x() - 1);
 	if ((b & RIGHT_BUTTON) && player.x() < 88)
 		player.setX(player.x() + 1);
+
+	if (b == (LEFT_BUTTON | RIGHT_BUTTON)) {
+		while (SpriteCore::buttonsState()) SpriteCore::idle();
+		while (SpriteCore::buttonsState() != (LEFT_BUTTON | RIGHT_BUTTON)) SpriteCore::idle();
+		while (SpriteCore::buttonsState()) SpriteCore::idle();
+		return true;
+	}
 
 	// Bullet movement
 	for (uint8_t i = 0; i < kNumPlayerBullets; ++i) {
