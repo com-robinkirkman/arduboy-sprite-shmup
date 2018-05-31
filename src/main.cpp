@@ -79,20 +79,6 @@ uint8_t buttonWait() {
 	return b;
 }
 
-void display(MaskedXYSprite *sprites, uint8_t len) {
-	uint8_t page[128];
-	for (uint8_t n = 0; n < 8; ++n) {
-		memset(page, inverted_ ? 0 : 255, 128);
-		for (uint8_t i = 0; i < len; ++i) {
-			sprites[i].render(n, page);
-		}
-		if (write_display_) {
-			Serial.write(page, 128);
-		}
-		SPI.transfer(page, 128);
-	}
-}
-
 void display(List<List<MaskedXYSprite>*> sprites) {
 	uint8_t page[128];
 	bool write_display = write_display_ && (millis() - last_frame_) / (1000 / 30);
@@ -100,12 +86,14 @@ void display(List<List<MaskedXYSprite>*> sprites) {
 		last_frame_ = millis();
 	for (int8_t n = 0; n < 8; ++n) {
 		memset(page, inverted_ ? 0 : 255, 128);
+		List<MaskedXYSprite> **s = sprites.buf_;
 		for (uint8_t i = 0; i < sprites.len_; ++i) {
-			uint8_t len = sprites[i]->len_;
-			MaskedXYSprite *list = sprites[i]->buf_;
+			uint8_t len = (*s)->len_;
+			MaskedXYSprite *list = (*s)->buf_;
 			for (uint8_t j = 0; j < len; ++j) {
 				list[j].render(n, page);
 			}
+			++s;
 		}
 		if (write_display) {
 			Serial.write(page, 128);
@@ -537,9 +525,7 @@ void gameover(uint32_t score) {
 		print("NEW HIGH SCORE", 0, 48, buf);
 	}
 
-	MaskedXYSprite sprite = {Sprite(128, 64, buf, false), {}};
-	sprite.setActive(true);
-	display(&sprite, 1);
+	SpriteCore::paintScreen(buf);
 
 	uint32_t now = micros();
 	while (micros() < now + 1000000)
@@ -559,10 +545,8 @@ void showTitle() {
 	itoa(getHighScore(), hs + 11, 10);
 	print(hs, (128 - 6 * strlen(hs)) / 2, 56, buf);
 	print("ArduSHMUP", (128-6*9)/2, 0, buf);
-	MaskedXYSprite shmup(Sprite(128, 64, buf, false), {});
-	shmup.setActive(true);
-	invert(true);
-	display(&shmup, 1);
+
+	SpriteCore::paintScreen(buf);
 
 	if (SpriteCore::buttonsState())
 		while (SpriteCore::buttonsState()) SpriteCore::idle();
@@ -587,8 +571,6 @@ void configure() {
 	loadConfiguration();
 
 	uint8_t buf[1024];
-	MaskedXYSprite sprite = {Sprite(128, 64, buf, false), {}};
-	sprite.setActive(true);
 
 	bool sound_enabled = ShmupSfx::isEnabled();
 	uint8_t base_framerate = base_framerate_;
@@ -612,7 +594,8 @@ void configure() {
 		print(" Clear score:", 0, 24, buf);
 		print(reset_high_score ? "YES" : "NO", 13*6, 24, buf);
 		print(">", 0, option * 8, buf);
-		display(&sprite, 1);
+
+		SpriteCore::paintScreen(buf);
 
 		uint8_t b = buttonWait();
 		if (b == UP_BUTTON) {
