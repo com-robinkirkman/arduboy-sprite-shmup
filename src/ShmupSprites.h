@@ -23,6 +23,9 @@ public:
   static const uint8_t BULLET[];
   static const uint8_t BULLET_MASK[];
 
+  static const uint8_t EBULLET[];
+  static const uint8_t EBULLET_MASK[];
+
   static const uint8_t WAVE[];
   static const uint8_t WAVE_MASK[];
   static const uint8_t EWAVE[];
@@ -37,6 +40,8 @@ public:
   static const Sprite enemyMask;
   static const Sprite bullet;
   static const Sprite bulletMask;
+  static const Sprite enemyBullet;
+  static const Sprite enemyBulletMask;
   static const Sprite wave;
   static const Sprite waveMask;
   static const Sprite enemyWave;

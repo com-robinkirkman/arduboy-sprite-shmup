@@ -18,8 +18,8 @@
 
 constexpr uint8_t kNumPlayerBullets = 6;
 constexpr uint8_t kNumPlayerWaves = 3;
-constexpr uint8_t kNumEnemies = 10;
-constexpr uint8_t kNumBulletsPerEnemy = 4;
+constexpr uint8_t kNumEnemies = 16;
+constexpr uint8_t kNumBulletsPerEnemy = 2;
 constexpr uint8_t kNumEnemyBullets = kNumEnemies * kNumBulletsPerEnemy;
 constexpr int kNumHealthSprites = 10;
 constexpr int kNumScoreSprites = 10;
@@ -119,7 +119,7 @@ void reset(State& state) {
 	for (uint8_t i = 0; i < kNumEnemies; ++i)
 		state.enemy_[i] = MaskedXYSprite(ShmupSprites::enemy, ShmupSprites::enemyMask);
 	for (uint8_t i = 0; i < kNumEnemyBullets; ++i)
-		state.enemy_bullets_[i] = MaskedXYSprite(ShmupSprites::bullet, ShmupSprites::bulletMask);
+		state.enemy_bullets_[i] = MaskedXYSprite(ShmupSprites::enemyBullet, ShmupSprites::enemyBulletMask);
 
 	state.player_beam_ = {ShmupSprites::beam, ShmupSprites::beamMask};
 
@@ -383,7 +383,7 @@ bool loop(State& state) {
 	}
 
 	// Enemy spawning
-	if ((state.frame_ % 6) == 0 && (rand() % 3) == 0) {
+	if ((rand() % 10) == 0) {
 		for (uint8_t i = 0; i < kNumEnemies; ++i) {
 			MaskedXYSprite& enemy = state.enemy_[i];
 			if (enemy.active()) continue;
@@ -401,12 +401,22 @@ bool loop(State& state) {
 	for (uint8_t i = 0; i < kNumEnemies; ++i) {
 		MaskedXYSprite& enemy = state.enemy_[i];
 		if (!enemy.active()) continue;
-		if ((state.frame_ + state.enemy_frame_[i]) % 48) continue;
+		if ((state.frame_ + state.enemy_frame_[i]) % 16) continue;
+		if (rand() % 3) continue;
 		for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
 			MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
 			if (bullet.active()) continue;
 			bullet.setX(enemy.x());
-			bullet.setY(enemy.y());
+			bullet.setY(enemy.y() - 5);
+			bullet.setActive(true);
+			ShmupSfx::bulletFired();
+			break;
+		}
+		for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
+			MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
+			if (bullet.active()) continue;
+			bullet.setX(enemy.x());
+			bullet.setY(enemy.y() + 5);
 			bullet.setActive(true);
 			ShmupSfx::bulletFired();
 			break;
