@@ -499,7 +499,7 @@ bool loop(State& state) {
 		--state.player_impacting_;
 
 	uint32_t now = micros();
-	while (now - state.frame_ts_ < 1000000 / (base_framerate_ + state.score_ / 50)) {
+	while (now - state.frame_ts_ < 1000000 / (base_framerate_ + state.score_ / 75)) {
 		now = micros();
 	}
 	state.frame_ts_ = now;
