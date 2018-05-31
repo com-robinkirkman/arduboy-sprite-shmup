@@ -41,12 +41,12 @@ ArrayList<MaskedXYSprite, 10> score_sprites_;
 ArrayList<List<MaskedXYSprite>*, 8> sprites_;
 
 uint8_t frame_ = 0;
-uint32_t frame_ts_ = 0;
+uint16_t frame_ts_ = 0;
 
 uint8_t wave_countdown_ = 0;
 
-int32_t health_ = 0;
-uint32_t score_ = 0;
+int16_t health_ = 0;
+uint16_t score_ = 0;
 int8_t player_impacting_ = 0;
 };
 
@@ -69,11 +69,11 @@ uint8_t buttonWait() {
 	return b;
 }
 
-void display(const List<MaskedXYSprite>& sprites) {
+void display(MaskedXYSprite *sprites, uint8_t len) {
 	uint8_t page[128];
-	for (int8_t n = 0; n < 8; ++n) {
+	for (uint8_t n = 0; n < 8; ++n) {
 		memset(page, inverted_ ? 0 : 255, 128);
-		for (uint8_t i = 0; i < sprites.size(); ++i) {
+		for (uint8_t i = 0; i < len; ++i) {
 			sprites[i].render(n, page);
 		}
 		if (write_display_) {
@@ -90,9 +90,10 @@ void display(List<List<MaskedXYSprite>*> sprites) {
 		last_frame_ = millis();
 	for (int8_t n = 0; n < 8; ++n) {
 		memset(page, inverted_ ? 0 : 255, 128);
-		for (uint8_t i = 0; i < sprites.size(); ++i) {
-			List<MaskedXYSprite> &list = *sprites[i];
-			for (uint8_t j = 0; j < list.size(); ++j) {
+		for (uint8_t i = 0; i < sprites.len_; ++i) {
+			uint8_t len = sprites[i]->len_;
+			MaskedXYSprite *list = sprites[i]->buf_;
+			for (uint8_t j = 0; j < len; ++j) {
 				list[j].render(n, page);
 			}
 		}
@@ -185,12 +186,12 @@ bool loop(State& state) {
 	ArrayList<List<MaskedXYSprite>*, 8> &sprites_ = state.sprites_;
 
 	uint8_t &frame_ = state.frame_;
-	uint32_t &frame_ts_ = state.frame_ts_;
+	uint16_t &frame_ts_ = state.frame_ts_;
 
 	uint8_t &wave_countdown_ = state.wave_countdown_;
 
-	int32_t &health_ = state.health_;
-	uint32_t &score_ = state.score_;
+	int16_t &health_ = state.health_;
+	uint16_t &score_ = state.score_;
 	int8_t &player_impacting_ = state.player_impacting_;
 
 	ShmupSfx::tick();
@@ -540,10 +541,9 @@ void gameover(uint32_t score) {
 		buf_gfx.print("NEW HIGH SCORE");
 	}
 
-	ArrayList<MaskedXYSprite, 1> sprite;
-	sprite[0] = {Sprite(128, 64, buf, false), {}};
-	sprite[0].setActive(true);
-	display(sprite);
+	MaskedXYSprite sprite = {Sprite(128, 64, buf, false), {}};
+	sprite.setActive(true);
+	display(&sprite, 1);
 
 	uint32_t now = micros();
 	while (micros() < now + 1000000)
@@ -556,7 +556,6 @@ void gameover(uint32_t score) {
 }
 
 void showTitle() {
-	ArrayList<MaskedXYSprite, 1> shmup;
 	uint8_t buf[1024];
 	memset(buf, 0, sizeof(buf));
 	SpriteGfx gfx(128, 64, buf);
@@ -571,10 +570,10 @@ void showTitle() {
 	sprintf(hs, "High Score: %lu", getHighScore());
 	gfx.setCursor(62 - 3 * strlen(hs), 56);
 	gfx.print(hs);
-	shmup[0] = MaskedXYSprite(Sprite(128, 64, buf, false), {});
-	shmup[0].setActive(true);
+	MaskedXYSprite shmup(Sprite(128, 64, buf, false), {});
+	shmup.setActive(true);
 	invert(true);
-	display(shmup);
+	display(&shmup, 1);
 
 	if (SpriteCore::buttonsState())
 		while (SpriteCore::buttonsState()) SpriteCore::idle();
@@ -601,9 +600,8 @@ void configure() {
 	uint8_t buf[1024];
 	SpriteGfx gfx(128, 64, buf);
 	gfx.setTextColor(SpriteGfx::kWhite);
-	ArrayList<MaskedXYSprite, 1> sprite;
-	sprite[0] = {Sprite(128, 64, buf, false), {}};
-	sprite[0].setActive(true);
+	MaskedXYSprite sprite = {Sprite(128, 64, buf, false), {}};
+	sprite.setActive(true);
 
 	bool sound_enabled = ShmupSfx::isEnabled();
 	uint8_t base_framerate = base_framerate_;
@@ -630,7 +628,7 @@ void configure() {
 		gfx.print(reset_high_score ? "YES" : "NO");
 		gfx.setCursor(0, option * 8);
 		gfx.print('>');
-		display(sprite);
+		display(&sprite, 1);
 
 		uint8_t b = buttonWait();
 		if (b == UP_BUTTON) {
