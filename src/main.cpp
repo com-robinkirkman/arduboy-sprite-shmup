@@ -439,7 +439,7 @@ bool loop(State& state) {
 		char buf[health_sprites_.size()];
 		itoa(health_, buf, 10);
 		for (uint8_t i = 0; i < health_sprites_.size(); ++i) {
-			health_sprites_[i] = {};
+			health_sprites_[i].setActive(false);
 		}
 		for (uint8_t i = 0; i < health_sprites_.size(); ++i) {
 			if (!buf[i]) break;
@@ -466,7 +466,7 @@ bool loop(State& state) {
 		char buf[score_sprites_.size()];
 		itoa(score_, buf, 10);
 		for (uint8_t i = 0; i < score_sprites_.size(); ++i) {
-			score_sprites_[i] = {};
+			score_sprites_[i].setActive(false);
 		}
 		for (uint8_t i = 0; i < score_sprites_.size(); ++i) {
 			if (!buf[i]) break;
