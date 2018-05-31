@@ -49,6 +49,6 @@ void ShmupSfx::enemyImpact() {
 void ShmupSfx::playerImpact() {
 	if (state_ > PLAYER_IMPACT) return;
 	state_ = PLAYER_IMPACT;
-	tones.tone(1500, 30, 3000, 10, 1500, 30);
+	tones.tone(1500, 100, 3000, 50, 1500, 100);
 }
 
