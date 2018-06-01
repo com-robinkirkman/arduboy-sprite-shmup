@@ -21,7 +21,7 @@
 constexpr uint8_t kNumPlayerBullets = 6;
 constexpr uint8_t kNumPlayerWaves = 3;
 constexpr uint8_t kNumEnemies = 15;
-constexpr uint8_t kNumBulletsPerEnemy = 4;
+constexpr uint8_t kNumBulletsPerEnemy = 2;
 constexpr uint8_t kNumEnemyBullets = kNumEnemies * kNumBulletsPerEnemy;
 constexpr int kNumHealthSprites = 10;
 constexpr int kNumScoreSprites = 10;
