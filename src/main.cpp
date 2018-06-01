@@ -550,7 +550,8 @@ void gameover(uint32_t score) {
 
 void showTitle() {
 	uint8_t buf[1024];
-	memcpy_P(buf, ShmupSprites::LOGO, 1024);
+	memset(buf, 0, 1024);
+	memcpy_P(buf, ShmupSprites::LOGO, 1285-541+1);
 	char hs[22];
 	memcpy(hs, "High Score: ", 11);
 	itoa(getHighScore(), hs + 11, 10);
