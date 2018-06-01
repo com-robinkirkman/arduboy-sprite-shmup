@@ -540,6 +540,7 @@ void gameover(uint32_t score) {
 		setHighScore(score);
 
 	SpriteCore::paintScreen(buf);
+	if (write_display_) Serial.write(buf, 1024);
 
 	uint32_t now = micros();
 	while (micros() < now + 1000000)
@@ -558,6 +559,7 @@ void showTitle() {
 	print(hs, (128 - 6 * strlen(hs)) / 2, 56, buf);
 
 	SpriteCore::paintScreen(buf);
+	if (write_display_) Serial.write(buf, 1024);
 
 	if (SpriteCore::buttonsState())
 		while (SpriteCore::buttonsState()) SpriteCore::idle();
@@ -607,6 +609,7 @@ void configure() {
 		print(">", 0, option * 8, buf);
 
 		SpriteCore::paintScreen(buf);
+		if (write_display_) Serial.write(buf, 1024);
 
 		uint8_t b = buttonWait();
 		if (b == UP_BUTTON) {
@@ -654,8 +657,11 @@ void setup() {
 		while (true) SpriteCore::idle();
 	}
 	if (b == DOWN_BUTTON) {
-		Serial.begin(4000000);
+		Serial.begin(2000000);
 		write_display_ = true;
+		for (uint8_t n = 0; n < 8; ++n) {
+			for (uint8_t i = 0; i < 128; ++i) SPI.transfer(0);
+		}
 		b = buttonWait();
 	}
 
