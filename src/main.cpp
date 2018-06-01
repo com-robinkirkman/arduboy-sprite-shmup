@@ -12,6 +12,8 @@
 #include <Sprite.h>
 #include <XYSprite.h>
 
+#include <avr/pgmspace.h>
+
 #include "ShmupSprites.h"
 #include "MaskedXYSprite.h"
 #include "ShmupSfx.h"
@@ -534,6 +536,9 @@ void gameover(uint32_t score) {
 		print("NEW HIGH SCORE", 0, 48, buf);
 	}
 
+	if (score > getHighScore())
+		setHighScore(score);
+
 	SpriteCore::paintScreen(buf);
 
 	uint32_t now = micros();
@@ -541,19 +546,15 @@ void gameover(uint32_t score) {
 		SpriteCore::idle();
 
 	buttonWait();
-
-	if (score > getHighScore())
-		setHighScore(score);
 }
 
 void showTitle() {
 	uint8_t buf[1024];
-	memset(buf, 0, sizeof(buf));
+	memcpy_P(buf, ShmupSprites::LOGO, 1024);
 	char hs[22];
 	memcpy(hs, "High Score: ", 11);
 	itoa(getHighScore(), hs + 11, 10);
 	print(hs, (128 - 6 * strlen(hs)) / 2, 56, buf);
-	print("ArduSHMUP", (128-6*9)/2, 0, buf);
 
 	SpriteCore::paintScreen(buf);
 

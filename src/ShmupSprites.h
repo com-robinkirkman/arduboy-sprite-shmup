@@ -34,6 +34,8 @@ public:
   static const uint8_t BEAM[];
   static const uint8_t BEAM_MASK[];
 
+  static const uint8_t LOGO[];
+
   static const Sprite player;
   static const Sprite playerMask;
   static const Sprite enemy;
@@ -60,9 +62,6 @@ public:
   static const uint8_t NUM_7[];
   static const uint8_t NUM_8[];
   static const uint8_t NUM_9[];
-
-  static bool Collides(int x1, int y1, const uint8_t *m1, int x2, int y2,
-      const uint8_t *m2);
 };
 
 #endif /* SRC_SPRITES_H_ */
