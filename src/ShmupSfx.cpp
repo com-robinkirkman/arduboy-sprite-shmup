@@ -29,12 +29,12 @@ void ShmupSfx::tick() {
 void ShmupSfx::bulletFired() {
 	if (state_ > BULLET_FIRED) return;
 	state_ = BULLET_FIRED;
-	tones.tone(500, 5);
+	tones.tone(500, 15);
 }
 void ShmupSfx::waveFired() {
 	if (state_ > WAVE_FIRED) return;
 	state_ = WAVE_FIRED;
-	tones.tone(800, 10, 200, 10, 800, 10);
+	tones.tone(200, 10, 400, 10, 800, 10);
 }
 void ShmupSfx::beamFired() {
 	if (state_ > BEAM_FIRED) return;
@@ -44,11 +44,11 @@ void ShmupSfx::beamFired() {
 void ShmupSfx::enemyImpact() {
 	if (state_ > ENEMY_IMPACT) return;
 	state_ = ENEMY_IMPACT;
-	tones.tone(1000, 20, 1500, 20, 1000, 20);
+	tones.tone(100, 10, 150, 5, 100, 10);
 }
 void ShmupSfx::playerImpact() {
 	if (state_ > PLAYER_IMPACT) return;
 	state_ = PLAYER_IMPACT;
-	tones.tone(1500, 100, 3000, 50, 1500, 100);
+	tones.tone(1500, 10, 3000, 20, 1500, 10);
 }
 

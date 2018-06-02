@@ -413,7 +413,6 @@ bool loop(State& state) {
 			bullet.setX(enemy.x());
 			bullet.setY(enemy.y() - 5);
 			bullet.setActive(true);
-			ShmupSfx::bulletFired();
 			break;
 		}
 		for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
@@ -422,7 +421,6 @@ bool loop(State& state) {
 			bullet.setX(enemy.x());
 			bullet.setY(enemy.y() + 5);
 			bullet.setActive(true);
-			ShmupSfx::bulletFired();
 			break;
 		}
 	}

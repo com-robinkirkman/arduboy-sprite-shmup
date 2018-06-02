@@ -25,9 +25,9 @@ public:
 private:
 	static constexpr uint8_t NONE = 0;
 	static constexpr uint8_t BULLET_FIRED = 1;
-	static constexpr uint8_t WAVE_FIRED = 2;
-	static constexpr uint8_t BEAM_FIRED = 3;
-	static constexpr uint8_t ENEMY_IMPACT = 4;
+	static constexpr uint8_t ENEMY_IMPACT = 2;
+	static constexpr uint8_t WAVE_FIRED = 3;
+	static constexpr uint8_t BEAM_FIRED = 4;
 	static constexpr uint8_t PLAYER_IMPACT = 5;
 
 	static uint8_t state_;
