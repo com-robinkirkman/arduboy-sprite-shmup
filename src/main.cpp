@@ -217,7 +217,7 @@ bool loop(State& state) {
 	for (uint8_t i = 0; i < kNumPlayerWaves; ++i) {
 		MaskedXYSprite& wave = state.player_waves_[i];
 		if (!wave.active()) continue;
-		wave.setX(wave.x() + 1);
+		wave.setX(wave.x() + 3);
 		if (wave.x() >= 128 || wave.x() >= state.player_wave_ends_[i])
 			wave.setActive(false);
 	}
