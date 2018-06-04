@@ -30,9 +30,9 @@ private:
 	static constexpr uint8_t BULLET_FIRED = 1;
 	static constexpr uint8_t ENEMY_IMPACT = 2;
 	static constexpr uint8_t WAVE_FIRED = 3;
-	static constexpr uint8_t ENEMY_WAVE_FIRED = 3;
-	static constexpr uint8_t BEAM_FIRED = 4;
-	static constexpr uint8_t PLAYER_IMPACT = 5;
+	static constexpr uint8_t ENEMY_WAVE_FIRED = 4;
+	static constexpr uint8_t BEAM_FIRED = 5;
+	static constexpr uint8_t PLAYER_IMPACT = 6;
 
 	static void sfx(uint8_t priority, const uint16_t *sptr);
 
