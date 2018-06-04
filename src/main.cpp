@@ -77,6 +77,7 @@ uint8_t base_framerate_;
 bool write_display_ = false;
 bool inverted_ = false;
 bool play_inverted_ = false;
+bool enable_pause_ = false;
 
 void invert(bool b) {
 	inverted_ = b;
@@ -194,20 +195,20 @@ bool loop(State& state) {
 	uint8_t b = Arduboy2Core::buttonsState();
 
 	// Pause check
-	if ((b & (A_BUTTON | B_BUTTON)) == (A_BUTTON | B_BUTTON)) {
+	if (enable_pause_ && (b & (A_BUTTON | B_BUTTON)) == (A_BUTTON | B_BUTTON)) {
 		MaskedXYSprite pause(ShmupSprites::pause, ShmupSprites::none);
 		pause.setX(54);
 		pause.setY(28);
 		pause.setActive(true);
 		uint8_t page[128];
+		invert(true);
 		for (uint8_t n = 0; n < 8; ++n) {
-			memset(page, 0, 128);
+			memset(page, inverted_ ? 0 : 255, 128);
 			pause.render(n, page);
 			SPI.transfer(page, 128);
 		}
 		ShmupSfx::reset();
 		setRGBled(0,0,0);
-		invert(false);
 		while (Arduboy2Core::buttonsState()) Arduboy2Core::idle();
 		while (Arduboy2Core::buttonsState() != (A_BUTTON | B_BUTTON)) Arduboy2Core::idle();
 		while (Arduboy2Core::buttonsState()) Arduboy2Core::idle();
@@ -660,12 +661,14 @@ void loadConfiguration() {
 	Arduboy2Audio::begin();
 	base_framerate_ = EEPROM.read(EEPROM_STORAGE_SPACE_START + 5);
 	play_inverted_ = EEPROM.read(EEPROM_STORAGE_SPACE_START + 6);
+	enable_pause_ = EEPROM.read(EEPROM_STORAGE_SPACE_START + 7);
 }
 
 void storeConfiguration() {
 	Arduboy2Audio::saveOnOff();
 	EEPROM.write(EEPROM_STORAGE_SPACE_START + 5, base_framerate_);
 	EEPROM.write(EEPROM_STORAGE_SPACE_START + 6, play_inverted_);
+	EEPROM.write(EEPROM_STORAGE_SPACE_START + 7, enable_pause_);
 }
 
 void configure() {
@@ -693,8 +696,10 @@ void configure() {
 		print(ibuf, 11*6, 8, buf);
 		print(" Invert:", 0, 16, buf);
 		print(play_inverted_ ? "ON" : "OFF", 8*6, 16, buf);
-		print(" Clear score:", 0, 24, buf);
-		print(reset_high_score ? "YES" : "NO", 13*6, 24, buf);
+		print(" Pause:", 0, 24, buf);
+		print(enable_pause_ ? "ON" : "OFF", 7*6, 24, buf);
+		print(" Clear score:", 0, 32, buf);
+		print(reset_high_score ? "YES" : "NO", 13*6, 32, buf);
 		print(">", 0, option * 8, buf);
 
 		Arduboy2Core::paintScreen(buf);
@@ -703,11 +708,11 @@ void configure() {
 		uint8_t b = buttonWait();
 		if (b == UP_BUTTON) {
 			option -= 1;
-			if (option < 0) option = 3;
+			if (option < 0) option = 4;
 		}
 		if (b == DOWN_BUTTON) {
 			option += 1;
-			if (option > 3) option = 0;
+			if (option > 4) option = 0;
 		}
 		if (option == 0 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
 			sound_enabled = !sound_enabled;
@@ -724,6 +729,9 @@ void configure() {
 			play_inverted_ = !play_inverted_;
 		}
 		if (option == 3 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
+			enable_pause_ = !enable_pause_;
+		}
+		if (option == 4 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
 			reset_high_score = !reset_high_score;
 		}
 		if (b == A_BUTTON)
