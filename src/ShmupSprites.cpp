@@ -114,10 +114,10 @@ const uint8_t ShmupSprites::BULLET_MASK[] PROGMEM = {
 };
 
 const uint8_t ShmupSprites::EBULLET[] PROGMEM = {
-		0b00001000,
-		0b00010000,
-		0b00001000,
-		0b00010000,
+		0b00011000,
+		0b00011000,
+		0b00011000,
+		0b00011000,
 };
 
 const uint8_t ShmupSprites::NUM_NEG[] PROGMEM = {
