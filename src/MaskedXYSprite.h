@@ -12,22 +12,25 @@
 
 class MaskedXYSprite {
 public:
+	static constexpr uint8_t kXOffset = XYSprite::kXOffset;
+	static constexpr uint8_t kYOffset = XYSprite::kYOffset;
+
 	MaskedXYSprite(const Sprite& sprite, const Sprite& mask) : MaskedXYSprite(0, 0, sprite, mask, false) {}
 	MaskedXYSprite() : MaskedXYSprite(0, 0, {}, {}, false) {}
-	MaskedXYSprite(int x, int y, const Sprite& sprite, const Sprite& mask, bool active);
+	MaskedXYSprite(uint8_t x, uint8_t y, const Sprite& sprite, const Sprite& mask, bool active);
 
-	void render(int page_num, uint8_t *page) const;
+	void render(uint8_t page_num, uint8_t *page) const;
 
 	bool intersects(const MaskedXYSprite& other) const;
 
 	inline bool active() const { return active_; }
 	inline void setActive(bool active) { active_ = active; }
 
-	inline int x() const { return x_; }
-	inline void setX(int x) { x_ = x; }
+	inline uint8_t x() const { return x_; }
+	inline void setX(uint8_t x) { x_ = x; }
 
-	inline int y() const { return y_; }
-	inline void setY(int y) { y_ = y; }
+	inline uint8_t y() const { return y_; }
+	inline void setY(uint8_t y) { y_ = y; }
 
 	inline Sprite& sprite() { return sprite_; }
 
@@ -35,7 +38,7 @@ public:
 
 private:
 	bool active_;
-	int x_, y_;
+	uint8_t x_, y_;
 	Sprite sprite_, mask_;
 };
 

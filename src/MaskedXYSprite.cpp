@@ -10,7 +10,7 @@
 
 extern bool inverted_;
 
-MaskedXYSprite::MaskedXYSprite(int x, int y, const Sprite& sprite, const Sprite& mask, bool active)
+MaskedXYSprite::MaskedXYSprite(uint8_t x, uint8_t y, const Sprite& sprite, const Sprite& mask, bool active)
 {
 	x_ = x;
 	y_ = y;
@@ -19,7 +19,7 @@ MaskedXYSprite::MaskedXYSprite(int x, int y, const Sprite& sprite, const Sprite&
 	active_ = active;
 }
 
-void MaskedXYSprite::render(int page_num, uint8_t *page) const {
+void MaskedXYSprite::render(uint8_t page_num, uint8_t *page) const {
 	if (!active_) return;
 	if (!inverted_) {
 		XYSprite s(x_, y_, Sprite::kOr, mask_);

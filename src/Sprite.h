@@ -39,11 +39,11 @@ public:
 	inline uint8_t height() const { return height_; }
 	inline const uint8_t *raster() const { return raster_; }
 
-	void render(RenderMode mode, int x, int y, int w, uint8_t *dst) const;
+	void render(RenderMode mode, int8_t x, int8_t y, uint8_t w, uint8_t *dst) const;
 
 private:
-	void renderRamSpace(RenderMode mode, int x, int y, int w, uint8_t *dst) const;
-	void renderPgmSpace(RenderMode mode, int x, int y, int w, uint8_t *dst) const;
+	void renderRamSpace(RenderMode mode, int8_t x, int8_t y, uint8_t w, uint8_t *dst) const;
+	void renderPgmSpace(RenderMode mode, int8_t x, int8_t y, uint8_t w, uint8_t *dst) const;
 
 	bool progmem_;
 	uint8_t width_;

@@ -12,14 +12,17 @@
 
 class XYSprite {
 public:
+	static constexpr uint8_t kXOffset = 64;
+	static constexpr uint8_t kYOffset = 64;
+
 	XYSprite() : XYSprite(0, 0, Sprite::kNone, {}) {}
-	XYSprite(int x, int y, Sprite::RenderMode mode, const Sprite sprite);
+	XYSprite(uint8_t x, uint8_t y, Sprite::RenderMode mode, const Sprite sprite);
 
-	int x() const { return x_; }
-	int y() const { return y_; }
+	uint8_t x() const { return x_; }
+	uint8_t y() const { return y_; }
 
-	void setX(int x) { x_ = x; }
-	void setY(int y) { y_ = y; }
+	void setX(uint8_t x) { x_ = x; }
+	void setY(uint8_t y) { y_ = y; }
 
 	inline const Sprite sprite() const { return sprite_; }
 
@@ -41,8 +44,8 @@ public:
 private:
 	uint8_t mode_;
 	Sprite sprite_;
-	int x_;
-	int y_;
+	uint8_t x_;
+	uint8_t y_;
 };
 
 #endif /* SRC_XYSPRITE_H_ */

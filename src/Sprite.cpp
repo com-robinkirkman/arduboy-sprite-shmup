@@ -36,7 +36,7 @@ Sprite::Sprite(uint8_t width, uint8_t height, const uint8_t *raster, bool progme
 
 Sprite::Sprite(unsigned char c) : Sprite(5, 7, font + 5 * c, true) {}
 
-void Sprite::render(RenderMode mode, int x, int y, int w, uint8_t *dst) const {
+void Sprite::render(RenderMode mode, int8_t x, int8_t y, uint8_t w, uint8_t *dst) const {
 	if (!raster_)
 		return;
 	if (progmem_) {
@@ -46,7 +46,7 @@ void Sprite::render(RenderMode mode, int x, int y, int w, uint8_t *dst) const {
 	}
 }
 
-void Sprite::renderRamSpace(RenderMode mode, int x, int y, int w, uint8_t *dst) const {
+void Sprite::renderRamSpace(RenderMode mode, int8_t x, int8_t y, uint8_t w, uint8_t *dst) const {
 	if (y < -7 || y >= height_) return;
 	if (x < 0) {
 		w += x;
@@ -56,49 +56,49 @@ void Sprite::renderRamSpace(RenderMode mode, int x, int y, int w, uint8_t *dst) 
 		w = width_ - x;
 	}
 	if (w <= 0) return;
-	int row = y >> 3;
-	int offset = y & 7;
+	int8_t row = y >> 3;
+	uint8_t offset = y & 7;
 
 	const uint8_t *r1 = raster_ + width_ * row + x;
 	if (offset == 0) {
 		if (mode == kAnd) {
-			for (int i = 0; i < w; ++i) *dst++ &= *r1++;
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= *r1++;
 		} else if (mode == kOr) {
-			for (int i = 0; i < w; ++i) *dst++ |= *r1++;
+			for (uint8_t i = 0; i < w; ++i) *dst++ |= *r1++;
 		} else if (mode == kMask) {
-			for (int i = 0; i < w; ++i) *dst++ &= ~ *r1++;
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ~ *r1++;
 		}
 		return;
 	}
 	const uint8_t *r2 = r1 + width_;
 	if (row >= 0 && 8 * row + 8 < height_) {
 		if (mode == kAnd) {
-			for (int i = 0; i < w; ++i) *dst++ &= ((*r2++ << (8 - offset)) | (*r1++ >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ((*r2++ << (8 - offset)) | (*r1++ >> offset));
 		} else if (mode == kOr) {
-			for (int i = 0; i < w; ++i) *dst++ |= ((*r2++ << (8 - offset)) | (*r1++ >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ |= ((*r2++ << (8 - offset)) | (*r1++ >> offset));
 		} else if (mode == kMask) {
-			for (int i = 0; i < w; ++i) *dst++ &= ~ ((*r2++ << (8 - offset)) | (*r1++ >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ~ ((*r2++ << (8 - offset)) | (*r1++ >> offset));
 		}
 	} else if(row < 0) {
 		if (mode == kAnd) {
-			for (int i = 0; i < w; ++i) *dst++ &= ((*r2++ << (8 - offset)));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ((*r2++ << (8 - offset)));
 		} else if (mode == kOr) {
-			for (int i = 0; i < w; ++i) *dst++ |= ((*r2++ << (8 - offset)));
+			for (uint8_t i = 0; i < w; ++i) *dst++ |= ((*r2++ << (8 - offset)));
 		} else if (mode == kMask) {
-			for (int i = 0; i < w; ++i) *dst++ &= ~ ((*r2++ << (8 - offset)));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ~ ((*r2++ << (8 - offset)));
 		}
 	} else {
 		if (mode == kAnd) {
-			for (int i = 0; i < w; ++i) *dst++ &= ((*r1++ >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ((*r1++ >> offset));
 		} else if (mode == kOr) {
-			for (int i = 0; i < w; ++i) *dst++ |= ((*r1++ >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ |= ((*r1++ >> offset));
 		} else if (mode == kMask) {
-			for (int i = 0; i < w; ++i) *dst++ &= ~ ((*r1++ >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ~ ((*r1++ >> offset));
 		}
 	}
 }
 
-void Sprite::renderPgmSpace(RenderMode mode, int x, int y, int w, uint8_t *dst) const {
+void Sprite::renderPgmSpace(RenderMode mode, int8_t x, int8_t y, uint8_t w, uint8_t *dst) const {
 	if (y < -7 || y >= height_) return;
 	if (x < 0) {
 		w += x;
@@ -108,44 +108,44 @@ void Sprite::renderPgmSpace(RenderMode mode, int x, int y, int w, uint8_t *dst) 
 		w = width_ - x;
 	}
 	if (w <= 0) return;
-	int row = y >> 3;
-	int offset = y & 7;
+	int8_t row = y >> 3;
+	uint8_t offset = y & 7;
 
 	const uint8_t *r1 = raster_ + width_ * row + x;
 	if (offset == 0) {
 		if (mode == kAnd) {
-			for (int i = 0; i < w; ++i) *dst++ &= pgm_read_byte(r1++);
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= pgm_read_byte(r1++);
 		} else if (mode == kOr) {
-			for (int i = 0; i < w; ++i) *dst++ |= pgm_read_byte(r1++);
+			for (uint8_t i = 0; i < w; ++i) *dst++ |= pgm_read_byte(r1++);
 		} else if (mode == kMask) {
-			for (int i = 0; i < w; ++i) *dst++ &= ~ pgm_read_byte(r1++);
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ~ pgm_read_byte(r1++);
 		}
 		return;
 	}
 	const uint8_t *r2 = r1 + width_;
 	if (row >= 0 && 8 * row + 8 < height_) {
 		if (mode == kAnd) {
-			for (int i = 0; i < w; ++i) *dst++ &= ((pgm_read_byte(r2++) << (8 - offset)) | (pgm_read_byte(r1++) >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ((pgm_read_byte(r2++) << (8 - offset)) | (pgm_read_byte(r1++) >> offset));
 		} else if (mode == kOr) {
-			for (int i = 0; i < w; ++i) *dst++ |= ((pgm_read_byte(r2++) << (8 - offset)) | (pgm_read_byte(r1++) >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ |= ((pgm_read_byte(r2++) << (8 - offset)) | (pgm_read_byte(r1++) >> offset));
 		} else if (mode == kMask) {
-			for (int i = 0; i < w; ++i) *dst++ &= ~ ((pgm_read_byte(r2++) << (8 - offset)) | (pgm_read_byte(r1++) >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ~ ((pgm_read_byte(r2++) << (8 - offset)) | (pgm_read_byte(r1++) >> offset));
 		}
 	} else if(row < 0) {
 		if (mode == kAnd) {
-			for (int i = 0; i < w; ++i) *dst++ &= ((pgm_read_byte(r2++) << (8 - offset)));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ((pgm_read_byte(r2++) << (8 - offset)));
 		} else if (mode == kOr) {
-			for (int i = 0; i < w; ++i) *dst++ |= ((pgm_read_byte(r2++) << (8 - offset)));
+			for (uint8_t i = 0; i < w; ++i) *dst++ |= ((pgm_read_byte(r2++) << (8 - offset)));
 		} else if (mode == kMask) {
-			for (int i = 0; i < w; ++i) *dst++ &= ~ ((pgm_read_byte(r2++) << (8 - offset)));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ~ ((pgm_read_byte(r2++) << (8 - offset)));
 		}
 	} else {
 		if (mode == kAnd) {
-			for (int i = 0; i < w; ++i) *dst++ &= ((pgm_read_byte(r1++) >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ((pgm_read_byte(r1++) >> offset));
 		} else if (mode == kOr) {
-			for (int i = 0; i < w; ++i) *dst++ |= ((pgm_read_byte(r1++) >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ |= ((pgm_read_byte(r1++) >> offset));
 		} else if (mode == kMask) {
-			for (int i = 0; i < w; ++i) *dst++ &= ~ ((pgm_read_byte(r1++) >> offset));
+			for (uint8_t i = 0; i < w; ++i) *dst++ &= ~ ((pgm_read_byte(r1++) >> offset));
 		}
 	}
 }
