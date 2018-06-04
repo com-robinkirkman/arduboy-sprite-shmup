@@ -328,6 +328,15 @@ bool loop(State& state) {
 			}
 		}
 		for (uint8_t i = 0; i < kNumEnemies; ++i) {
+			MaskedXYSprite& wave = state.enemy_waves_[i];
+			if (!wave.active()) continue;
+			if (beam.intersects(wave)) {
+				wave.setActive(false);
+				state.health_ += 20;
+				state.score_ += 20;
+			}
+		}
+		for (uint8_t i = 0; i < kNumEnemies; ++i) {
 			MaskedXYSprite& enemy = state.enemy_[i];
 			if (!enemy.active()) continue;
 			if (beam.intersects(enemy)) {
