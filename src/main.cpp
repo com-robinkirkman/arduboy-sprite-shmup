@@ -673,11 +673,11 @@ void showTitle() {
 void storeConfiguration() {
 	Arduboy2Audio::saveOnOff();
 	for (uint8_t i = 0; i < sizeof(kEepromMagic); ++i)
-		EEPROM.write(kEepromMagicOffset + i, kEepromMagic[i]);
-	EEPROM.write(kEepromFramerateOffset, base_framerate_);
-	EEPROM.write(kEepromInvertOffset, play_inverted_);
-	EEPROM.write(kEepromPauseOffset, enable_pause_);
-	EEPROM.write(kEepromHelpOffset, enable_help_);
+		EEPROM.update(kEepromMagicOffset + i, kEepromMagic[i]);
+	EEPROM.update(kEepromFramerateOffset, base_framerate_);
+	EEPROM.update(kEepromInvertOffset, play_inverted_);
+	EEPROM.update(kEepromPauseOffset, enable_pause_);
+	EEPROM.update(kEepromHelpOffset, enable_help_);
 }
 
 void loadConfiguration() {
