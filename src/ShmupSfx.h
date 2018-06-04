@@ -12,6 +12,10 @@
 
 class ShmupSfx {
 public:
+	static void begin();
+
+	static void beginGame();
+
 	static void bulletFired();
 	static void waveFired();
 	static void beamFired();
@@ -20,8 +24,6 @@ public:
 	static void tick();
 	static void reset();
 
-	static void enable(bool enabled) { enabled_ = enabled; }
-	static bool isEnabled() { return enabled_; }
 private:
 	static constexpr uint8_t NONE = 0;
 	static constexpr uint8_t BULLET_FIRED = 1;
@@ -30,8 +32,10 @@ private:
 	static constexpr uint8_t BEAM_FIRED = 4;
 	static constexpr uint8_t PLAYER_IMPACT = 5;
 
-	static uint8_t state_;
-	static bool enabled_;
+	static void sfx(uint8_t priority, const uint16_t *sptr);
+
+	static uint8_t state1_;
+	static uint8_t state2_;
 };
 
 #endif /* SRC_SHMUPSFX_H_ */

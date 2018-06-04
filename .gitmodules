@@ -10,3 +10,6 @@
 [submodule "lib/ArduboyTones"]
 	path = lib/ArduboyTones
 	url = https://github.com/MLXXXp/ArduboyTones.git
+[submodule "lib/Arduboy2"]
+	path = lib/Arduboy2
+	url = https://github.com/MLXXXp/Arduboy2.git

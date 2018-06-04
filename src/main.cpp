@@ -8,9 +8,12 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <USBAPI.h>
-#include <SpriteCore.h>
-#include <Sprite.h>
-#include <XYSprite.h>
+#include "Sprite.h"
+#include "XYSprite.h"
+
+#include <SPI.h>
+
+#include <Arduboy2.h>
 
 #include <avr/pgmspace.h>
 
@@ -75,9 +78,9 @@ void invert(bool b) {
 
 uint8_t buttonWait() {
 	uint8_t b;
-	while (SpriteCore::buttonsState()) SpriteCore::idle();
-	while (!(b = SpriteCore::buttonsState())) SpriteCore::idle();
-	while (SpriteCore::buttonsState()) SpriteCore::idle();
+	while (Arduboy2Core::buttonsState()) Arduboy2Core::idle();
+	while (!(b = Arduboy2Core::buttonsState())) Arduboy2Core::idle();
+	while (Arduboy2Core::buttonsState()) Arduboy2Core::idle();
 	return b;
 }
 
@@ -155,18 +158,18 @@ void setRGBled(uint8_t red, uint8_t green, uint8_t blue)
 
 uint32_t getHighScore() {
 	uint32_t score = 0;
-	score |= EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 0); score <<= 8;
-	score |= EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 1); score <<= 8;
-	score |= EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 2); score <<= 8;
-	score |= EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 3);
+	score |= EEPROM.read(EEPROM_STORAGE_SPACE_START + 0); score <<= 8;
+	score |= EEPROM.read(EEPROM_STORAGE_SPACE_START + 1); score <<= 8;
+	score |= EEPROM.read(EEPROM_STORAGE_SPACE_START + 2); score <<= 8;
+	score |= EEPROM.read(EEPROM_STORAGE_SPACE_START + 3);
 	return score;
 }
 
 void setHighScore(uint32_t score) {
-	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 0, score >> 24);
-	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 1, score >> 16);
-	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 2, score >> 8);
-	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 3, score);
+	EEPROM.write(EEPROM_STORAGE_SPACE_START + 0, score >> 24);
+	EEPROM.write(EEPROM_STORAGE_SPACE_START + 1, score >> 16);
+	EEPROM.write(EEPROM_STORAGE_SPACE_START + 2, score >> 8);
+	EEPROM.write(EEPROM_STORAGE_SPACE_START + 3, score);
 }
 
 
@@ -181,7 +184,7 @@ bool loop(State& state) {
 	++state.frame_;
 
 	MaskedXYSprite& player = state.player_;
-	uint8_t b = SpriteCore::buttonsState();
+	uint8_t b = Arduboy2Core::buttonsState();
 
 	// Player movement
 	if ((b & UP_BUTTON) && player.y() > 0)
@@ -510,9 +513,11 @@ bool loop(State& state) {
 }
 
 uint32_t statefulLoop() {
+	ShmupSfx::beginGame();
 	State state;
 	setup(state);
 	while(loop(state));
+	ShmupSfx::reset();
 	return state.score_;
 }
 
@@ -537,12 +542,12 @@ void gameover(uint32_t score) {
 	if (score > getHighScore())
 		setHighScore(score);
 
-	SpriteCore::paintScreen(buf);
+	Arduboy2Core::paintScreen(buf);
 	if (write_display_) Serial.write(buf, 1024);
 
 	uint32_t now = micros();
 	while (micros() < now + 1000000)
-		SpriteCore::idle();
+		Arduboy2Core::idle();
 
 	buttonWait();
 }
@@ -556,25 +561,25 @@ void showTitle() {
 	itoa(getHighScore(), hs + 11, 10);
 	print(hs, (128 - 6 * strlen(hs)) / 2, 56, buf);
 
-	SpriteCore::paintScreen(buf);
+	Arduboy2Core::paintScreen(buf);
 	if (write_display_) Serial.write(buf, 1024);
 
-	if (SpriteCore::buttonsState())
-		while (SpriteCore::buttonsState()) SpriteCore::idle();
+	if (Arduboy2Core::buttonsState())
+		while (Arduboy2Core::buttonsState()) Arduboy2Core::idle();
 	else
 		buttonWait();
 }
 
 void loadConfiguration() {
-	ShmupSfx::enable(EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 4));
-	base_framerate_ = EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 5);
-	play_inverted_ = EEPROM.read(SpriteCore::EEPROM_STORAGE_SPACE_START + 6);
+	Arduboy2Audio::begin();
+	base_framerate_ = EEPROM.read(EEPROM_STORAGE_SPACE_START + 5);
+	play_inverted_ = EEPROM.read(EEPROM_STORAGE_SPACE_START + 6);
 }
 
 void storeConfiguration() {
-	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 4, ShmupSfx::isEnabled());
-	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 5, base_framerate_);
-	EEPROM.write(SpriteCore::EEPROM_STORAGE_SPACE_START + 6, play_inverted_);
+	Arduboy2Audio::saveOnOff();
+	EEPROM.write(EEPROM_STORAGE_SPACE_START + 5, base_framerate_);
+	EEPROM.write(EEPROM_STORAGE_SPACE_START + 6, play_inverted_);
 }
 
 void configure() {
@@ -583,7 +588,7 @@ void configure() {
 
 	uint8_t buf[1024];
 
-	bool sound_enabled = ShmupSfx::isEnabled();
+	bool sound_enabled = EEPROM.read(EEPROM_AUDIO_ON_OFF);
 	uint8_t base_framerate = base_framerate_;
 	switch(base_framerate) {
 	case 15: case 30: case 45: case 60: case 75: break;
@@ -606,7 +611,7 @@ void configure() {
 		print(reset_high_score ? "YES" : "NO", 13*6, 24, buf);
 		print(">", 0, option * 8, buf);
 
-		SpriteCore::paintScreen(buf);
+		Arduboy2Core::paintScreen(buf);
 		if (write_display_) Serial.write(buf, 1024);
 
 		uint8_t b = buttonWait();
@@ -639,7 +644,11 @@ void configure() {
 			break;
 	}
 
-	ShmupSfx::enable(sound_enabled);
+	if (sound_enabled) {
+		Arduboy2Audio::on();
+	} else {
+		Arduboy2Audio::off();
+	}
 	base_framerate_ = base_framerate;
 	storeConfiguration();
 	if (reset_high_score)
@@ -647,12 +656,12 @@ void configure() {
 }
 
 void setup() {
-	SpriteCore::begin();
-	uint8_t b = SpriteCore::buttonsState();
+	Arduboy2Core::boot();
+	uint8_t b = Arduboy2Core::buttonsState();
 	if (b & UP_BUTTON) {
-		SpriteCore::allPixelsOn(true);
+		Arduboy2Core::allPixelsOn(true);
 		setRGBled(255, 255, 255);
-		while (true) SpriteCore::idle();
+		while (true) Arduboy2Core::idle();
 	}
 	if (b == DOWN_BUTTON) {
 		Serial.begin(2000000);
@@ -669,6 +678,8 @@ void setup() {
 	}
 
 	loadConfiguration();
+
+	ShmupSfx::begin();
 
 	randomSeed(micros());
 }

@@ -7,48 +7,95 @@
 
 #include <ShmupSfx.h>
 
-#include <ArduboyTones.h>
+#include <Arduboy2Audio.h>
+#include <Arduboy2Beep.h>
+#include <Arduboy2Core.h>
 
-namespace {
-ArduboyTones tones(ShmupSfx::isEnabled);
+uint8_t ShmupSfx::state1_ = NONE;
+uint8_t ShmupSfx::state2_ = NONE;
+
+const uint16_t off_[] = { 0, 0 };
+
+const uint16_t bullet_[] = { 250, 3, 0, 0};
+const uint16_t wave_[] = { 7500, 3, 2500, 1, 7500, 3, 2500, 1, 7500, 3, 2500, 1, 0, 0 };
+const uint16_t beam_[] = { 2000, 1, 0, 0 };
+const uint16_t enemy_impact_[] = { 1000, 2, 900, 2, 800, 2, 700, 2, 0, 0 };
+const uint16_t player_impact_[] = { 1000, 3, 1200, 3, 1400, 3, 1600, 3, 0, 0 };
+
+const uint16_t *sfx1_ = off_;
+const uint16_t *sfx2_ = off_;
+
+void ShmupSfx::sfx(uint8_t priority, const uint16_t *sptr) {
+	uint16_t freq = *(sptr++);
+	uint16_t duration = *(sptr++);
+	if (priority > state1_) {
+		state1_ = priority;
+		sfx1_ = sptr;
+		BeepPin1::tone(BeepPin1::freq(freq), duration);
+	} else if(priority > state2_) {
+		state2_ = priority;
+		sfx2_ = sptr;
+		BeepPin2::tone(BeepPin2::freq(freq), duration);
+	}
 }
 
-bool ShmupSfx::enabled_ = true;
-uint8_t ShmupSfx::state_ = NONE;
+void ShmupSfx::begin() {
+	BeepPin1::begin();
+	BeepPin2::begin();
+}
+
+void ShmupSfx::beginGame() {
+	state1_ = NONE;
+	state2_ = NONE;
+	sfx1_ = off_;
+	sfx2_ = off_;
+	BeepPin1::noTone();
+	BeepPin2::noTone();
+}
 
 void ShmupSfx::reset() {
-	state_ = NONE;
-	tones.noTone();
+	state1_ = NONE;
+	state2_ = NONE;
+	BeepPin1::noTone();
+	BeepPin2::noTone();
 }
 
 void ShmupSfx::tick() {
-	if (!tones.playing())
-		state_ = NONE;
+	BeepPin1::timer();
+	BeepPin2::timer();
+	if (!BeepPin1::duration && state1_) {
+		uint16_t freq = *(sfx1_++);
+		uint16_t duration = *(sfx1_++);
+		if (freq == 0) {
+			state1_ = NONE;
+		} else {
+			BeepPin1::tone(BeepPin1::freq(freq), duration);
+		}
+	}
+	if (!BeepPin2::duration && state2_) {
+		uint16_t freq = *(sfx2_++);
+		uint16_t duration = *(sfx2_++);
+		if (freq == 0) {
+			state2_ = NONE;
+		} else {
+			BeepPin2::tone(BeepPin2::freq(freq), duration);
+		}
+	}
 }
 
 void ShmupSfx::bulletFired() {
-	if (state_ > BULLET_FIRED) return;
-	state_ = BULLET_FIRED;
-	tones.tone(500, 15);
+	sfx(BULLET_FIRED, bullet_);
 }
 void ShmupSfx::waveFired() {
-	if (state_ > WAVE_FIRED) return;
-	state_ = WAVE_FIRED;
-	tones.tone(200, 10, 400, 10, 800, 10);
+	sfx(WAVE_FIRED, wave_);
 }
 void ShmupSfx::beamFired() {
-	if (state_ > BEAM_FIRED) return;
-	state_ = BEAM_FIRED;
-	tones.tone(2000, 10);
+	sfx(BEAM_FIRED, beam_);
 }
 void ShmupSfx::enemyImpact() {
-	if (state_ > ENEMY_IMPACT) return;
-	state_ = ENEMY_IMPACT;
-	tones.tone(100, 10, 150, 5, 100, 10);
+	sfx(ENEMY_IMPACT, enemy_impact_);
 }
 void ShmupSfx::playerImpact() {
-	if (state_ > PLAYER_IMPACT) return;
-	state_ = PLAYER_IMPACT;
-	tones.tone(1500, 10, 3000, 20, 1500, 10);
+	sfx(PLAYER_IMPACT, player_impact_);
 }
 
