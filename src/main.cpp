@@ -379,6 +379,7 @@ bool loop(State& state) {
 				state.health_ -= 500;
 			state.player_impacting_ = base_framerate_;
 			ShmupSfx::playerImpact();
+			wave.setActive(false);
 		}
 	}
 	// Enemy impacts
@@ -470,6 +471,7 @@ bool loop(State& state) {
 				wave.setActive(true);
 				wave.setX(enemy.x());
 				wave.setY(enemy.y());
+				state.enemy_wave_ends[i] = enemy.x() - 64;
 				ShmupSfx::enemyWaveFired();
 			}
 		}
