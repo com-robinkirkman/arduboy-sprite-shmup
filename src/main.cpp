@@ -107,7 +107,8 @@ void display(const State& state) {
 		render(state.player_bullets_, kNumPlayerBullets, n, page);
 		render(state.enemy_bullets_, kNumEnemyBullets, n, page);
 		render(state.player_waves_, kNumPlayerWaves, n, page);
-		render(state.enemy_waves_, kNumEnemies, n, page);
+		if (state.frame_ & 1)
+			render(state.enemy_waves_, kNumEnemies, n, page);
 		render(state.enemy_, kNumEnemies, n, page);
 		render(&state.player_beam_, 1, n, page);
 		render(&state.player_, 1, n, page);
@@ -225,7 +226,7 @@ bool loop(State& state) {
 	for (uint8_t i = 0; i < kNumPlayerWaves; ++i) {
 		MaskedXYSprite& wave = state.player_waves_[i];
 		if (!wave.active()) continue;
-		wave.setX(wave.x() + 1);
+		wave.setX(wave.x() + 3);
 		if (wave.x() >= 128 || wave.x() >= state.player_wave_ends_[i])
 			wave.setActive(false);
 	}
@@ -454,7 +455,7 @@ bool loop(State& state) {
 	for (uint8_t i = 0; i < kNumEnemies; ++i) {
 		MaskedXYSprite& enemy = state.enemy_[i];
 		if (!enemy.active()) continue;
-		if ((state.frame_ + state.enemy_frame_[i]) % 16 == 0) {
+		if ((state.frame_ + state.enemy_frame_[i]) % 12 == 0) {
 			if (rand() % 4 == 0) {
 				for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
 					MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
@@ -562,13 +563,6 @@ bool loop(State& state) {
 				state.enemy_[i].sprite() = ShmupSprites::enemyMask;
 			}
 		}
-	}
-
-	for (int i = 0; i < kNumPlayerWaves; ++i) {
-		state.player_waves_[i].sprite() = (state.frame_ & 1) ? ShmupSprites::wave : ShmupSprites::none;
-	}
-	for (int i = 0; i < kNumEnemies; ++i) {
-		state.enemy_waves_[i].sprite() = (state.frame_ & 1) ? ShmupSprites::enemyWave : ShmupSprites::none;
 	}
 
 	display(state);
