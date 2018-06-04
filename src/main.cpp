@@ -34,6 +34,14 @@ constexpr int kNumScoreSprites = 10;
 constexpr int kEnemyExplosionFrames = 12;
 constexpr int kPlayerImpactFrames = 16;
 
+constexpr char kEepromMagic[] = "ArduSHMUP";
+constexpr int kEepromMagicOffset = EEPROM_STORAGE_SPACE_START;
+constexpr int kEepromScoreOffset = kEepromMagicOffset + sizeof(kEepromMagic);
+constexpr int kEepromFramerateOffset = kEepromScoreOffset + 4;
+constexpr int kEepromInvertOffset = kEepromFramerateOffset + 1;
+constexpr int kEepromPauseOffset = kEepromInvertOffset + 1;
+constexpr int kEepromHelpOffset = kEepromPauseOffset + 1;
+
 constexpr uint8_t kXOffset = XYSprite::kXOffset;
 constexpr uint8_t kYOffset = XYSprite::kYOffset;
 
@@ -81,6 +89,8 @@ bool write_display_ = false;
 bool inverted_ = false;
 bool play_inverted_ = false;
 bool enable_pause_ = false;
+bool enable_help_ = false;
+bool has_magic_ = false;
 
 void invert(bool b) {
 	inverted_ = b;
@@ -169,18 +179,18 @@ void setRGBled(uint8_t red, uint8_t green, uint8_t blue)
 
 uint32_t getHighScore() {
 	uint32_t score = 0;
-	score |= EEPROM.read(EEPROM_STORAGE_SPACE_START + 0); score <<= 8;
-	score |= EEPROM.read(EEPROM_STORAGE_SPACE_START + 1); score <<= 8;
-	score |= EEPROM.read(EEPROM_STORAGE_SPACE_START + 2); score <<= 8;
-	score |= EEPROM.read(EEPROM_STORAGE_SPACE_START + 3);
+	score |= EEPROM.read(kEepromScoreOffset + 0); score <<= 8;
+	score |= EEPROM.read(kEepromScoreOffset + 1); score <<= 8;
+	score |= EEPROM.read(kEepromScoreOffset + 2); score <<= 8;
+	score |= EEPROM.read(kEepromScoreOffset + 3);
 	return score;
 }
 
 void setHighScore(uint32_t score) {
-	EEPROM.write(EEPROM_STORAGE_SPACE_START + 0, score >> 24);
-	EEPROM.write(EEPROM_STORAGE_SPACE_START + 1, score >> 16);
-	EEPROM.write(EEPROM_STORAGE_SPACE_START + 2, score >> 8);
-	EEPROM.write(EEPROM_STORAGE_SPACE_START + 3, score);
+	EEPROM.write(kEepromScoreOffset + 0, score >> 24);
+	EEPROM.write(kEepromScoreOffset + 1, score >> 16);
+	EEPROM.write(kEepromScoreOffset + 2, score >> 8);
+	EEPROM.write(kEepromScoreOffset + 3, score);
 }
 
 
@@ -660,18 +670,36 @@ void showTitle() {
 		buttonWait();
 }
 
-void loadConfiguration() {
-	Arduboy2Audio::begin();
-	base_framerate_ = EEPROM.read(EEPROM_STORAGE_SPACE_START + 5);
-	play_inverted_ = EEPROM.read(EEPROM_STORAGE_SPACE_START + 6);
-	enable_pause_ = EEPROM.read(EEPROM_STORAGE_SPACE_START + 7);
-}
-
 void storeConfiguration() {
 	Arduboy2Audio::saveOnOff();
-	EEPROM.write(EEPROM_STORAGE_SPACE_START + 5, base_framerate_);
-	EEPROM.write(EEPROM_STORAGE_SPACE_START + 6, play_inverted_);
-	EEPROM.write(EEPROM_STORAGE_SPACE_START + 7, enable_pause_);
+	for (uint8_t i = 0; i < sizeof(kEepromMagic); ++i)
+		EEPROM.write(kEepromMagicOffset + i, kEepromMagic[i]);
+	EEPROM.write(kEepromFramerateOffset, base_framerate_);
+	EEPROM.write(kEepromInvertOffset, play_inverted_);
+	EEPROM.write(kEepromPauseOffset, enable_pause_);
+	EEPROM.write(kEepromHelpOffset, enable_help_);
+}
+
+void loadConfiguration() {
+	Arduboy2Audio::begin();
+	has_magic_ = true;
+	for (uint8_t i = 0; i < sizeof(kEepromMagic); ++i) {
+		if (EEPROM.read(kEepromMagicOffset + i) != kEepromMagic[i])
+			has_magic_ = false;
+	}
+	if (has_magic_) {
+		base_framerate_ = EEPROM.read(kEepromFramerateOffset);
+		play_inverted_ = EEPROM.read(kEepromInvertOffset);
+		enable_pause_ = EEPROM.read(kEepromPauseOffset);
+		enable_help_ = EEPROM.read(kEepromHelpOffset);
+	} else {
+		base_framerate_ = 45;
+		play_inverted_ = false;
+		enable_pause_ = true;
+		enable_help_ = true;
+		setHighScore(0);
+		storeConfiguration();
+	}
 }
 
 void configure() {
@@ -681,10 +709,9 @@ void configure() {
 	uint8_t buf[1024];
 
 	bool sound_enabled = EEPROM.read(EEPROM_AUDIO_ON_OFF);
-	uint8_t base_framerate = base_framerate_;
-	switch(base_framerate) {
+	switch(base_framerate_) {
 	case 15: case 30: case 45: case 60: case 75: break;
-	default: base_framerate = 45;
+	default: base_framerate_ = 45;
 	}
 	bool reset_high_score = false;
 
@@ -695,14 +722,16 @@ void configure() {
 		print(sound_enabled ? "ON" : "OFF", 7*6, 0, buf);
 		print(" Framerate:", 0, 8, buf);
 		char ibuf[4];
-		itoa(base_framerate, ibuf, 10);
+		itoa(base_framerate_, ibuf, 10);
 		print(ibuf, 11*6, 8, buf);
 		print(" Invert:", 0, 16, buf);
 		print(play_inverted_ ? "ON" : "OFF", 8*6, 16, buf);
 		print(" Pause:", 0, 24, buf);
 		print(enable_pause_ ? "ON" : "OFF", 7*6, 24, buf);
-		print(" Clear score:", 0, 32, buf);
-		print(reset_high_score ? "YES" : "NO", 13*6, 32, buf);
+		print(" Show help:", 0, 32, buf);
+		print(enable_help_ ? "ON" : "OFF", 11*6, 32, buf);
+		print(" Clear score:", 0, 40, buf);
+		print(reset_high_score ? "YES" : "NO", 13*6, 40, buf);
 		print(">", 0, option * 8, buf);
 
 		Arduboy2Core::paintScreen(buf);
@@ -711,22 +740,22 @@ void configure() {
 		uint8_t b = buttonWait();
 		if (b == UP_BUTTON) {
 			option -= 1;
-			if (option < 0) option = 4;
+			if (option < 0) option = 5;
 		}
 		if (b == DOWN_BUTTON) {
 			option += 1;
-			if (option > 4) option = 0;
+			if (option > 5) option = 0;
 		}
 		if (option == 0 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
 			sound_enabled = !sound_enabled;
 		}
 		if (option == 1 && b == LEFT_BUTTON) {
-			base_framerate -= 15;
-			if (base_framerate < 15) base_framerate = 75;
+			base_framerate_ -= 15;
+			if (base_framerate_ < 15) base_framerate_ = 75;
 		}
 		if (option == 1 && b == RIGHT_BUTTON) {
-			base_framerate += 15;
-			if (base_framerate > 75) base_framerate = 15;
+			base_framerate_ += 15;
+			if (base_framerate_ > 75) base_framerate_ = 15;
 		}
 		if (option == 2 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
 			play_inverted_ = !play_inverted_;
@@ -735,6 +764,9 @@ void configure() {
 			enable_pause_ = !enable_pause_;
 		}
 		if (option == 4 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
+			enable_help_ = !enable_help_;
+		}
+		if (option == 5 && (b == LEFT_BUTTON || b == RIGHT_BUTTON)) {
 			reset_high_score = !reset_high_score;
 		}
 		if (b == A_BUTTON)
@@ -746,10 +778,27 @@ void configure() {
 	} else {
 		Arduboy2Audio::off();
 	}
-	base_framerate_ = base_framerate;
 	storeConfiguration();
 	if (reset_high_score)
 		setHighScore(0);
+}
+
+void showHelp() {
+	uint8_t buf[1024];
+	memset(buf, 0, 1024);
+	print("ArduSHMUP Controls", 10, 0, buf);
+	print("PWR+A:Options", 0, 12, buf);
+	print("PWR+\031:Screen Mirror", 0, 20, buf);
+	print("PWR+\030:Flash", 0, 28, buf);
+	print("  A+B:Pause", 0, 36, buf);
+	print("    A:Wave", 0, 44, buf);
+	print("    B:Beam", 0, 52, buf);
+
+	for(uint8_t i = 0; i < 128; ++i)
+		buf[i] ^= 0xff;
+
+	SPI.transfer(buf, 1024);
+	buttonWait();
 }
 
 void setup() {
@@ -783,6 +832,7 @@ void setup() {
 
 void loop() {
 	showTitle();
+	if (enable_help_) showHelp();
 	uint32_t score = statefulLoop();
 	gameover(score);
 }
