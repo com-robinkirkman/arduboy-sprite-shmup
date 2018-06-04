@@ -801,6 +801,18 @@ void showHelp() {
 	buttonWait();
 }
 
+uint8_t enableMirroring() {
+	Serial.begin(1000000);
+	write_display_ = true;
+	uint8_t buf[1024];
+	memset(buf, 0, 1024);
+	print("Screen mirroring on.", 0, 0, buf);
+	print("Press any key.", 0, 8, buf);
+	Serial.write(buf, 1024);
+	SPI.transfer(buf, 1024);
+	return buttonWait();
+}
+
 void setup() {
 	Arduboy2Core::boot();
 	uint8_t b = Arduboy2Core::buttonsState();
@@ -810,14 +822,8 @@ void setup() {
 		while (true) Arduboy2Core::idle();
 	}
 	if (b == DOWN_BUTTON) {
-		Serial.begin(1000000);
-		write_display_ = true;
-		for (uint8_t n = 0; n < 8; ++n) {
-			for (uint8_t i = 0; i < 128; ++i) SPI.transfer(0);
-		}
-		b = buttonWait();
+		b = enableMirroring();
 	}
-
 
 	if (b == A_BUTTON) {
 		configure();
