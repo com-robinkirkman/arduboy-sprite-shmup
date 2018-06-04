@@ -451,15 +451,7 @@ bool loop(State& state) {
 					MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
 					if (bullet.active()) continue;
 					bullet.setX(enemy.x());
-					bullet.setY(enemy.y() - 5);
-					bullet.setActive(true);
-					break;
-				}
-				for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
-					MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
-					if (bullet.active()) continue;
-					bullet.setX(enemy.x());
-					bullet.setY(enemy.y() + 5);
+					bullet.setY(enemy.y());
 					bullet.setActive(true);
 					break;
 				}
