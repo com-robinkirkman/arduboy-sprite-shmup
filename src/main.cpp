@@ -32,6 +32,7 @@ constexpr uint8_t kNumEnemyBullets = kNumEnemies * kNumBulletsPerEnemy;
 constexpr int kNumHealthSprites = 10;
 constexpr int kNumScoreSprites = 10;
 constexpr int kEnemyExplosionFrames = 12;
+constexpr int kPlayerImpactFrames = 16;
 
 struct State {
 	MaskedXYSprite player_;
@@ -355,7 +356,7 @@ bool loop(State& state) {
 			if (!state.player_impacting_)
 				state.health_ -= 500;
 			bullet.setActive(false);
-			state.player_impacting_ = base_framerate_;
+			state.player_impacting_ = kPlayerImpactFrames;
 			ShmupSfx::playerImpact();
 		}
 	}
@@ -374,7 +375,7 @@ bool loop(State& state) {
 		if (wave.intersects(player)) {
 			if (!state.player_impacting_)
 				state.health_ -= 500;
-			state.player_impacting_ = base_framerate_;
+			state.player_impacting_ = kPlayerImpactFrames;
 			ShmupSfx::playerImpact();
 			wave.setActive(false);
 		}
@@ -387,7 +388,7 @@ bool loop(State& state) {
 			if (!state.player_impacting_)
 				state.health_ -= 500;
 			enemy.setActive(false);
-			state.player_impacting_ = base_framerate_;
+			state.player_impacting_ = kPlayerImpactFrames;
 			ShmupSfx::playerImpact();
 		}
 	}
@@ -540,9 +541,9 @@ bool loop(State& state) {
 	else if (state.health_ < 1500) setRGBled(0, 127, 0);
 	else setRGBled(0, 0, 127);
 
-	if (state.player_impacting_ > 1)
+	if (state.player_impacting_ > 1 && (state.frame_ & 3))
 		invert(play_inverted_);
-	if (state.player_impacting_ == 0)
+	else
 		invert(!play_inverted_);
 	if (state.player_impacting_ > 0)
 		--state.player_impacting_;
