@@ -5,6 +5,9 @@
  *      Author: robin
  */
 
+#define USBCON
+#define SERIAL_BUFFER_SIZE 140
+
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <USBAPI.h>
@@ -74,8 +77,6 @@ bool write_display_ = false;
 bool inverted_ = false;
 bool play_inverted_ = false;
 
-uint32_t last_frame_ = 0;
-
 void invert(bool b) {
 	inverted_ = b;
 }
@@ -96,9 +97,6 @@ inline void render(const MaskedXYSprite* s, uint8_t len, uint8_t page_num, uint8
 
 void display(const State& state) {
 	uint8_t page[128];
-	bool write_display = write_display_ && (millis() - last_frame_) / (1000 / 30);
-	if (write_display)
-		last_frame_ = millis();
 	for (uint8_t n = 0; n < 8; ++n) {
 		memset(page, inverted_ ? 0 : 255, 128);
 
@@ -113,7 +111,7 @@ void display(const State& state) {
 		render(&state.player_beam_, 1, n, page);
 		render(&state.player_, 1, n, page);
 
-		if (write_display) {
+		if (write_display_) {
 			Serial.write(page, 128);
 		}
 		SPI.transfer(page, 128);
@@ -730,7 +728,7 @@ void setup() {
 		while (true) Arduboy2Core::idle();
 	}
 	if (b == DOWN_BUTTON) {
-		Serial.begin(2000000);
+		Serial.begin(1000000);
 		write_display_ = true;
 		for (uint8_t n = 0; n < 8; ++n) {
 			for (uint8_t i = 0; i < 128; ++i) SPI.transfer(0);
