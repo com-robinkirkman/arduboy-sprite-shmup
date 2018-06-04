@@ -381,7 +381,7 @@ bool loop(State& state) {
 	// Player beam firing
 	if ((b & B_BUTTON) && state.health_ > 5) {
 		state.player_beam_.setX(player.x() + 8);
-		state.player_beam_.setY(player.y());
+		state.player_beam_.setY(player.y() - 4);
 		state.player_beam_.setActive(true);
 		state.health_ -= 5;
 		ShmupSfx::beamFired();

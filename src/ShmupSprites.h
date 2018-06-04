@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#include <Sprite.h>
+#include "Sprite.h"
 
 class ShmupSprites {
 public:

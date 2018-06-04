@@ -8,7 +8,7 @@
 #ifndef SRC_MASKEDXYSPRITE_H_
 #define SRC_MASKEDXYSPRITE_H_
 
-#include <XYSprite.h>
+#include "XYSprite.h"
 
 class MaskedXYSprite {
 public:
