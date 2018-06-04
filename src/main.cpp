@@ -469,6 +469,7 @@ bool loop(State& state) {
 				wave.setActive(true);
 				wave.setX(enemy.x());
 				wave.setY(enemy.y());
+				ShmupSfx::enemyWaveFired();
 			}
 		}
 	}
