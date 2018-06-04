@@ -391,7 +391,7 @@ bool loop(State& state) {
 
 	// Enemy spawning
 	if ((rand() % 8) == 0) {
-		for (uint8_t i = 0; i < kNumEnemies && i < 3 + state.score_ / 400; ++i) {
+		for (uint8_t i = 0; i < kNumEnemies && i < 3 + state.score_ / 800; ++i) {
 			MaskedXYSprite& enemy = state.enemy_[i];
 			if (enemy.active()) continue;
 			enemy.setX(119);
