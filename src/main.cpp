@@ -105,8 +105,7 @@ void display(const State& state) {
 		render(state.player_bullets_, kNumPlayerBullets, n, page);
 		render(state.enemy_bullets_, kNumEnemyBullets, n, page);
 		render(state.player_waves_, kNumPlayerWaves, n, page);
-		if (state.frame_ & 1)
-			render(state.enemy_waves_, kNumEnemies, n, page);
+		render(state.enemy_waves_, kNumEnemies, n, page);
 		render(state.enemy_, kNumEnemies, n, page);
 		render(&state.player_beam_, 1, n, page);
 		render(&state.player_, 1, n, page);
