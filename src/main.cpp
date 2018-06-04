@@ -28,7 +28,7 @@ constexpr uint8_t kNumBulletsPerEnemy = 2;
 constexpr uint8_t kNumEnemyBullets = kNumEnemies * kNumBulletsPerEnemy;
 constexpr int kNumHealthSprites = 10;
 constexpr int kNumScoreSprites = 10;
-constexpr int kEnemyExplosionFrames = 16;
+constexpr int kEnemyExplosionFrames = 12;
 
 struct State {
 	MaskedXYSprite player_;
