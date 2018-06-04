@@ -16,10 +16,10 @@ const Sprite ShmupSprites::enemyMask(8, 8, ENEMY_MASK, true);
 const Sprite ShmupSprites::bullet(8, 8, BULLET, true);
 const Sprite ShmupSprites::bulletMask(8, 8, BULLET_MASK, true);
 const Sprite ShmupSprites::enemyBullet(8, 8, EBULLET, true);
-const Sprite ShmupSprites::enemyBulletMask(8, 8, EBULLET_MASK, true);
+const Sprite ShmupSprites::enemyBulletMask(8, 8, EBULLET, true);
 const Sprite ShmupSprites::wave(5, 16, WAVE, true);
 const Sprite ShmupSprites::waveMask(5, 16, WAVE, true);
-const Sprite ShmupSprites::enemyWave(4, 8, EWAVE, true);
+const Sprite ShmupSprites::enemyWave(3, 8, EWAVE, true);
 const Sprite ShmupSprites::enemyWaveMask(4, 8, EWAVE, true);
 const Sprite ShmupSprites::beam(128, 16, BEAM, true);
 const Sprite ShmupSprites::beamMask(128, 16, BEAM, true);
@@ -91,25 +91,14 @@ const uint8_t ShmupSprites::BULLET_MASK[] PROGMEM = {
 };
 
 const uint8_t ShmupSprites::EBULLET[] PROGMEM = {
-		0b00010000,
-		0b00001000,
-		0b00010000,
-		0b00001000,
-		0b00010000,
-		0b00001000,
-		0b00010000,
-		0b00001000,
-};
-
-const uint8_t ShmupSprites::EBULLET_MASK[] PROGMEM = {
-		0b00010000,
-		0b00001000,
-		0b00010000,
-		0b00001000,
-		0b00010000,
-		0b00001000,
-		0b00010000,
-		0b00001000,
+		0b00011000,
+		0b00011000,
+		0b00011000,
+		0b00011000,
+		0b00011000,
+		0b00011000,
+		0b00011000,
+		0b00011000,
 };
 
 const uint8_t ShmupSprites::NUM_NEG[] PROGMEM = {
@@ -247,10 +236,9 @@ const uint8_t ShmupSprites::WAVE[] PROGMEM = {
 };
 
 const uint8_t ShmupSprites::EWAVE[] PROGMEM = {
-		0b00011000,
-		0b00100100,
-		0b01000010,
-		0b10000001,
+		0b00111100,
+		0b01111110,
+		0b11000011,
 };
 
 const uint8_t ShmupSprites::BEAM[] PROGMEM = {

@@ -24,15 +24,11 @@ public:
   static const uint8_t BULLET_MASK[];
 
   static const uint8_t EBULLET[];
-  static const uint8_t EBULLET_MASK[];
 
   static const uint8_t WAVE[];
-  static const uint8_t WAVE_MASK[];
   static const uint8_t EWAVE[];
-  static const uint8_t EWAVE_MASK[];
 
   static const uint8_t BEAM[];
-  static const uint8_t BEAM_MASK[];
 
   static const uint8_t LOGO[];
 
