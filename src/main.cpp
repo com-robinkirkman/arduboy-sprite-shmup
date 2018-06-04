@@ -28,31 +28,35 @@ constexpr uint8_t kNumBulletsPerEnemy = 2;
 constexpr uint8_t kNumEnemyBullets = kNumEnemies * kNumBulletsPerEnemy;
 constexpr int kNumHealthSprites = 10;
 constexpr int kNumScoreSprites = 10;
+constexpr int kEnemyExplosionFrames = 16;
 
 struct State {
-MaskedXYSprite player_;
-MaskedXYSprite player_bullets_[kNumPlayerBullets];
-MaskedXYSprite player_waves_[kNumPlayerWaves];
-uint8_t player_wave_ends_[kNumPlayerWaves];
-MaskedXYSprite player_beam_;
+	MaskedXYSprite player_;
+	MaskedXYSprite player_bullets_[kNumPlayerBullets];
+	MaskedXYSprite player_waves_[kNumPlayerWaves];
+	uint8_t player_wave_ends_[kNumPlayerWaves];
+	MaskedXYSprite player_beam_;
 
-MaskedXYSprite enemy_[kNumEnemies];
-uint8_t enemy_frame_[kNumEnemies];
-int8_t enemy_ydelta_[kNumEnemies];
-uint8_t enemy_xdelta_[kNumEnemies];
-MaskedXYSprite enemy_bullets_[kNumEnemyBullets];
+	MaskedXYSprite enemy_[kNumEnemies];
+	uint8_t enemy_exploding_[kNumEnemies];
+	uint8_t enemy_frame_[kNumEnemies];
+	int8_t enemy_ydelta_[kNumEnemies];
+	uint8_t enemy_xdelta_[kNumEnemies];
+	MaskedXYSprite enemy_bullets_[kNumEnemyBullets];
+	MaskedXYSprite enemy_waves_[kNumEnemies];
+	int8_t enemy_wave_ends[kNumEnemies];
 
-MaskedXYSprite health_sprites_[kNumHealthSprites];
-MaskedXYSprite score_sprites_[kNumScoreSprites];
+	MaskedXYSprite health_sprites_[kNumHealthSprites];
+	MaskedXYSprite score_sprites_[kNumScoreSprites];
 
-uint8_t frame_ = 0;
-uint32_t frame_ts_ = 0;
+	uint8_t frame_ = 0;
+	uint32_t frame_ts_ = 0;
 
-uint8_t wave_countdown_ = 0;
+	uint8_t wave_countdown_ = 0;
 
-int16_t health_ = 0;
-uint16_t score_ = 0;
-int8_t player_impacting_ = 0;
+	int16_t health_ = 0;
+	uint16_t score_ = 0;
+	int8_t player_impacting_ = 0;
 };
 
 void print(const char *s, int x, int y, uint8_t *buf) {
@@ -103,6 +107,7 @@ void display(const State& state) {
 		render(state.player_bullets_, kNumPlayerBullets, n, page);
 		render(state.enemy_bullets_, kNumEnemyBullets, n, page);
 		render(state.player_waves_, kNumPlayerWaves, n, page);
+		render(state.enemy_waves_, kNumEnemies, n, page);
 		render(state.enemy_, kNumEnemies, n, page);
 		render(&state.player_beam_, 1, n, page);
 		render(&state.player_, 1, n, page);
@@ -121,8 +126,11 @@ void reset(State& state) {
 		state.player_bullets_[i] = MaskedXYSprite(ShmupSprites::bullet, ShmupSprites::bulletMask);
 	for (uint8_t i = 0; i < kNumPlayerWaves; ++i)
 		state.player_waves_[i] = MaskedXYSprite(ShmupSprites::wave, ShmupSprites::waveMask);
-	for (uint8_t i = 0; i < kNumEnemies; ++i)
+	for (uint8_t i = 0; i < kNumEnemies; ++i) {
 		state.enemy_[i] = MaskedXYSprite(ShmupSprites::enemy, ShmupSprites::enemyMask);
+		state.enemy_exploding_[i] = 0;
+		state.enemy_waves_[i] = MaskedXYSprite(ShmupSprites::enemyWave, ShmupSprites::enemyWaveMask);
+	}
 	for (uint8_t i = 0; i < kNumEnemyBullets; ++i)
 		state.enemy_bullets_[i] = MaskedXYSprite(ShmupSprites::enemyBullet, ShmupSprites::enemyBulletMask);
 
@@ -146,13 +154,13 @@ void reset(State& state) {
 void setRGBled(uint8_t red, uint8_t green, uint8_t blue)
 {
 #ifdef ARDUBOY_10 // RGB, all the pretty colors
-  // inversion is necessary because these are common annode LEDs
-  analogWrite(RED_LED, 255 - red);
-  analogWrite(GREEN_LED, 255 - green);
-  analogWrite(BLUE_LED, 255 - blue);
+	// inversion is necessary because these are common annode LEDs
+	analogWrite(RED_LED, 255 - red);
+	analogWrite(GREEN_LED, 255 - green);
+	analogWrite(BLUE_LED, 255 - blue);
 #elif defined(AB_DEVKIT)
-  // only blue on devkit
-  digitalWrite(BLUE_LED, ~blue);
+	// only blue on devkit
+	digitalWrite(BLUE_LED, ~blue);
 #endif
 }
 
@@ -221,6 +229,13 @@ bool loop(State& state) {
 		if (wave.x() >= 128 || wave.x() >= state.player_wave_ends_[i])
 			wave.setActive(false);
 	}
+	for (uint8_t i = 0; i < kNumEnemies; ++i) {
+		MaskedXYSprite& wave = state.enemy_waves_[i];
+		if (!wave.active()) continue;
+		wave.setX(wave.x() - 1);
+		if (wave.x() < 0 || wave.x() <= state.enemy_wave_ends[i])
+			wave.setActive(false);
+	}
 
 	// Enemy movement
 	for (uint8_t i = 0; i < kNumEnemies; ++i) {
@@ -257,6 +272,7 @@ bool loop(State& state) {
 			if (!enemy.active()) continue;
 			if (bullet.intersects(enemy)) {
 				enemy.setActive(false);
+				state.enemy_exploding_[j] = kEnemyExplosionFrames;
 				impact = true;
 				state.health_ += 10;
 				state.score_ += 10;
@@ -284,6 +300,7 @@ bool loop(State& state) {
 			if (!enemy.active()) continue;
 			if (wave.intersects(enemy)) {
 				enemy.setActive(false);
+				state.enemy_exploding_[j] = kEnemyExplosionFrames;
 				state.health_ += 10;
 				state.score_ += 10;
 				ShmupSfx::enemyImpact();
@@ -315,6 +332,7 @@ bool loop(State& state) {
 			if (!enemy.active()) continue;
 			if (beam.intersects(enemy)) {
 				enemy.setActive(false);
+				state.enemy_exploding_[i] = kEnemyExplosionFrames;
 				state.health_ += 10;
 				state.score_ += 10;
 				ShmupSfx::enemyImpact();
@@ -335,6 +353,24 @@ bool loop(State& state) {
 		}
 	}
 
+	// Enemy wave impacts
+	for (uint8_t i = 0; i < kNumEnemies; ++i) {
+		MaskedXYSprite& wave = state.enemy_waves_[i];
+		if (!wave.active()) continue;
+		for (uint8_t j = 0; j < kNumPlayerBullets; ++j) {
+			MaskedXYSprite& bullet = state.player_bullets_[j];
+			if (!bullet.active()) continue;
+			if (wave.intersects(bullet)) {
+				bullet.setActive(false);
+			}
+		}
+		if (wave.intersects(player)) {
+			if (!state.player_impacting_)
+				state.health_ -= 500;
+			state.player_impacting_ = base_framerate_;
+			ShmupSfx::playerImpact();
+		}
+	}
 	// Enemy impacts
 	for (uint8_t i = 0; i < kNumEnemies; ++i) {
 		MaskedXYSprite& enemy = state.enemy_[i];
@@ -391,9 +427,10 @@ bool loop(State& state) {
 
 	// Enemy spawning
 	if ((rand() % 8) == 0) {
-		for (uint8_t i = 0; i < kNumEnemies && i < 3 + state.score_ / 800; ++i) {
+		for (uint8_t i = 0; i < kNumEnemies && i < 3 + state.score_ / 400; ++i) {
 			MaskedXYSprite& enemy = state.enemy_[i];
 			if (enemy.active()) continue;
+			if (state.enemy_exploding_[i]) continue;
 			enemy.setX(119);
 			enemy.setY(rand() % 56);
 			enemy.setActive(true);
@@ -404,27 +441,34 @@ bool loop(State& state) {
 		}
 	}
 
-	// Enemy bullet firing
+	// Enemy bullet/wave firing
 	for (uint8_t i = 0; i < kNumEnemies; ++i) {
 		MaskedXYSprite& enemy = state.enemy_[i];
 		if (!enemy.active()) continue;
-		if ((state.frame_ + state.enemy_frame_[i]) % 16) continue;
-		if (rand() % 4) continue;
-		for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
-			MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
-			if (bullet.active()) continue;
-			bullet.setX(enemy.x());
-			bullet.setY(enemy.y() - 5);
-			bullet.setActive(true);
-			break;
-		}
-		for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
-			MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
-			if (bullet.active()) continue;
-			bullet.setX(enemy.x());
-			bullet.setY(enemy.y() + 5);
-			bullet.setActive(true);
-			break;
+		if ((state.frame_ + state.enemy_frame_[i]) % 16 == 0) {
+			if (rand() % 4 == 0) {
+				for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
+					MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
+					if (bullet.active()) continue;
+					bullet.setX(enemy.x());
+					bullet.setY(enemy.y() - 5);
+					bullet.setActive(true);
+					break;
+				}
+				for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
+					MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
+					if (bullet.active()) continue;
+					bullet.setX(enemy.x());
+					bullet.setY(enemy.y() + 5);
+					bullet.setActive(true);
+					break;
+				}
+			} else if(rand() % 8 == 0 && !state.enemy_waves_[i].active()) {
+				MaskedXYSprite& wave = state.enemy_waves_[i];
+				wave.setActive(true);
+				wave.setX(enemy.x());
+				wave.setY(enemy.y());
+			}
 		}
 	}
 
@@ -502,13 +546,30 @@ bool loop(State& state) {
 		--state.player_impacting_;
 
 	uint32_t now = micros();
-	while (now - state.frame_ts_ < 1000000 / (base_framerate_ + state.score_ / 75)) {
+	while (now - state.frame_ts_ < 1000000 / (base_framerate_ + state.score_ / 125)) {
 		now = micros();
 	}
 	state.frame_ts_ = now;
 
+	for (int i = 0; i < kNumEnemies; ++i) {
+		if (state.enemy_exploding_[i]) {
+			state.enemy_[i].setActive(true);
+			if (state.enemy_exploding_[i] & 1) {
+				state.enemy_[i].sprite() = ShmupSprites::enemy;
+			} else {
+				state.enemy_[i].sprite() = ShmupSprites::enemyMask;
+			}
+		}
+	}
+
 	display(state);
 
+	for (int i = 0; i < kNumEnemies; ++i) {
+		if (state.enemy_exploding_[i]) {
+			--state.enemy_exploding_[i];
+			state.enemy_[i].setActive(false);
+		}
+	}
 	return true;
 }
 
