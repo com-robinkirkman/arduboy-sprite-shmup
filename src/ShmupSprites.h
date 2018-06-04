@@ -36,6 +36,7 @@ public:
 
   static const uint8_t LOGO[];
 
+  static const Sprite none;
   static const Sprite player;
   static const Sprite playerMask;
   static const Sprite enemy;

@@ -8,6 +8,7 @@
 #include <ShmupSprites.h>
 #include <avr/pgmspace.h>
 
+const Sprite ShmupSprites::none;
 const Sprite ShmupSprites::player(8, 8, PLAYER, true);
 const Sprite ShmupSprites::playerMask(8, 8, PLAYER_MASK, true);
 const Sprite ShmupSprites::enemy(8, 8, ENEMY, true);

@@ -464,7 +464,7 @@ bool loop(State& state) {
 					bullet.setActive(true);
 					break;
 				}
-			} else if(rand() % 8 == 0 && !state.enemy_waves_[i].active()) {
+			} else if(rand() % 12 == 0 && !state.enemy_waves_[i].active()) {
 				MaskedXYSprite& wave = state.enemy_waves_[i];
 				wave.setActive(true);
 				wave.setX(enemy.x());
@@ -562,6 +562,13 @@ bool loop(State& state) {
 				state.enemy_[i].sprite() = ShmupSprites::enemyMask;
 			}
 		}
+	}
+
+	for (int i = 0; i < kNumPlayerWaves; ++i) {
+		state.player_waves_[i].sprite() = (state.frame_ & 1) ? ShmupSprites::wave : ShmupSprites::none;
+	}
+	for (int i = 0; i < kNumEnemies; ++i) {
+		state.enemy_waves_[i].sprite() = (state.frame_ & 1) ? ShmupSprites::enemyWave : ShmupSprites::none;
 	}
 
 	display(state);
