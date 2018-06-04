@@ -23,6 +23,29 @@ const Sprite ShmupSprites::enemyWave(3, 8, EWAVE, true);
 const Sprite ShmupSprites::enemyWaveMask(3, 8, EWAVE, true);
 const Sprite ShmupSprites::beam(128, 16, BEAM, true);
 const Sprite ShmupSprites::beamMask(128, 16, BEAM, true);
+const Sprite ShmupSprites::pause(19, 7, PAUSE, true);
+
+const uint8_t ShmupSprites::PAUSE[] PROGMEM = {
+	0b1011111,
+	0b1000101,
+	0b1000111,
+	0b1000000,
+	0b1011110,
+	0b1001001,
+	0b1011110,
+	0b1000000,
+	0b1011111,
+	0b1010000,
+	0b1011111,
+	0b1000000,
+	0b1010111,
+	0b1010101,
+	0b1011101,
+	0b1000000,
+	0b1011111,
+	0b1010101,
+	0b1010101
+};
 
 const uint8_t ShmupSprites::PLAYER[] PROGMEM = {
 		0b00011000,

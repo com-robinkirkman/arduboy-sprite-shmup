@@ -32,6 +32,8 @@ public:
 
   static const uint8_t LOGO[];
 
+  static const uint8_t PAUSE[];
+
   static const Sprite none;
   static const Sprite player;
   static const Sprite playerMask;
@@ -47,6 +49,8 @@ public:
   static const Sprite enemyWaveMask;
   static const Sprite beam;
   static const Sprite beamMask;
+
+  static const Sprite pause;
 
   static const uint8_t NUM_NEG[];
   static const uint8_t NUM_0[];

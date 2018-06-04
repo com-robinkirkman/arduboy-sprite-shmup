@@ -193,6 +193,28 @@ bool loop(State& state) {
 	MaskedXYSprite& player = state.player_;
 	uint8_t b = Arduboy2Core::buttonsState();
 
+	// Pause check
+	if ((b & (A_BUTTON | B_BUTTON)) == (A_BUTTON | B_BUTTON)) {
+		MaskedXYSprite pause(ShmupSprites::pause, ShmupSprites::none);
+		pause.setX(54);
+		pause.setY(28);
+		pause.setActive(true);
+		uint8_t page[128];
+		for (uint8_t n = 0; n < 8; ++n) {
+			memset(page, 0, 128);
+			pause.render(n, page);
+			SPI.transfer(page, 128);
+		}
+		ShmupSfx::reset();
+		setRGBled(0,0,0);
+		invert(false);
+		while (Arduboy2Core::buttonsState()) Arduboy2Core::idle();
+		while (Arduboy2Core::buttonsState() != (A_BUTTON | B_BUTTON)) Arduboy2Core::idle();
+		while (Arduboy2Core::buttonsState()) Arduboy2Core::idle();
+		ShmupSfx::beginGame();
+		return true;
+	}
+
 	// Player movement
 	if ((b & UP_BUTTON) && player.y() > 0)
 		player.setY(player.y() - 1);
