@@ -858,12 +858,11 @@ void setup() {
 	loadConfiguration();
 
 	ShmupSfx::begin();
-
-	randomSeed(micros());
 }
 
 void loop() {
 	showTitle();
+	randomSeed(micros());
 	if (enable_help_) showHelp();
 	uint32_t score = statefulLoop();
 	gameover(score);
