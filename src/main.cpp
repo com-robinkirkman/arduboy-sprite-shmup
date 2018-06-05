@@ -250,7 +250,7 @@ bool loop(State& state) {
 		player.setY(player.y() + 1);
 	if ((b & LEFT_BUTTON) && player.x() > 0 + kXOffset)
 		player.setX(player.x() - 1);
-	if ((b & RIGHT_BUTTON) && player.x() < 88 + kXOffset)
+	if ((b & RIGHT_BUTTON) && player.x() < 128 - 8 - 1 + kXOffset)
 		player.setX(player.x() + 1);
 
 	// Bullet movement
