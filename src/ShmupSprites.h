@@ -24,6 +24,7 @@ public:
   static const uint8_t BULLET_MASK[];
 
   static const uint8_t EBULLET[];
+  static const uint8_t EBULLET_MASK[];
 
   static const uint8_t WAVE[];
   static const uint8_t EWAVE[];

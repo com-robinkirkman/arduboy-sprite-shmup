@@ -58,6 +58,7 @@ struct State {
 	int8_t enemy_ydelta_[kNumEnemies];
 	uint8_t enemy_xdelta_[kNumEnemies];
 	MaskedXYSprite enemy_bullets_[kNumEnemyBullets];
+	int8_t enemy_bullet_ydelta_[kNumEnemyBullets];
 	MaskedXYSprite enemy_waves_[kNumEnemies];
 	int8_t enemy_wave_ends[kNumEnemies];
 
@@ -253,6 +254,15 @@ bool loop(State& state) {
 		uint8_t enemy = i / kNumBulletsPerEnemy;
 		bullet.setX(bullet.x() - (1 + state.enemy_xdelta_[enemy]));
 		if (bullet.x() < 0 + kXOffset)
+			bullet.setActive(false);
+		if (state.enemy_bullet_ydelta_[i] < 0) {
+			++state.enemy_bullet_ydelta_[i];
+			bullet.setY(bullet.y() - 1);
+		} else if (state.enemy_bullet_ydelta_[i] > 0) {
+			--state.enemy_bullet_ydelta_[i];
+			bullet.setY(bullet.y() + 1);
+		}
+		if (bullet.y() < 0 + kYOffset || bullet.y() > 64 + kYOffset)
 			bullet.setActive(false);
 	}
 
@@ -492,19 +502,30 @@ bool loop(State& state) {
 		if (!enemy.active()) continue;
 		if ((state.frame_ + state.enemy_frame_[i]) % 12 == 0) {
 			if (rand() % 4 == 0) {
+				int8_t spread = 4 + rand() % 5;
 				for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
 					MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
 					if (bullet.active()) continue;
 					bullet.setX(enemy.x());
 					bullet.setY(enemy.y());
 					bullet.setActive(true);
+					state.enemy_bullet_ydelta_[i * kNumBulletsPerEnemy + j] = -spread;
+					break;
+				}
+				for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
+					MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
+					if (bullet.active()) continue;
+					bullet.setX(enemy.x());
+					bullet.setY(enemy.y());
+					bullet.setActive(true);
+					state.enemy_bullet_ydelta_[i * kNumBulletsPerEnemy + j] = spread;
 					break;
 				}
 			} else if(rand() % 12 == 0 && !state.enemy_waves_[i].active()) {
 				MaskedXYSprite& wave = state.enemy_waves_[i];
 				wave.setActive(true);
 				wave.setX(enemy.x());
-				wave.setY(enemy.y());
+				wave.setY(enemy.y() - 4);
 				state.enemy_wave_ends[i] = enemy.x() - 64;
 				ShmupSfx::enemyWaveFired();
 			}
