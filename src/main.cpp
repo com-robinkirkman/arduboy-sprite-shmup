@@ -40,6 +40,7 @@ constexpr int kEepromFramerateOffset = kEepromScoreOffset + 4;
 constexpr int kEepromInvertOffset = kEepromFramerateOffset + 1;
 constexpr int kEepromPauseOffset = kEepromInvertOffset + 1;
 constexpr int kEepromHelpOffset = kEepromPauseOffset + 1;
+constexpr int kEepromTimeOffset = kEepromHelpOffset + 1;
 
 constexpr uint8_t kXOffset = XYSprite::kXOffset;
 constexpr uint8_t kYOffset = XYSprite::kYOffset;
@@ -174,7 +175,23 @@ void setRGBled(uint8_t red, uint8_t green, uint8_t blue)
 #endif
 }
 
-uint32_t getHighScore() {
+uint16_t getHighTime() {
+	uint32_t time = 0;
+	time |= EEPROM.read(kEepromTimeOffset + 0); time <<= 8;
+	time |= EEPROM.read(kEepromTimeOffset + 1); time <<= 8;
+	time |= EEPROM.read(kEepromTimeOffset + 2); time <<= 8;
+	time |= EEPROM.read(kEepromTimeOffset + 3);
+	return time;
+}
+
+void setHighTime(uint16_t time) {
+	EEPROM.write(kEepromTimeOffset + 0, time >> 24);
+	EEPROM.write(kEepromTimeOffset + 1, time >> 16);
+	EEPROM.write(kEepromTimeOffset + 2, time >> 8);
+	EEPROM.write(kEepromTimeOffset + 3, time);
+}
+
+uint16_t getHighScore() {
 	uint32_t score = 0;
 	score |= EEPROM.read(kEepromScoreOffset + 0); score <<= 8;
 	score |= EEPROM.read(kEepromScoreOffset + 1); score <<= 8;
@@ -183,7 +200,7 @@ uint32_t getHighScore() {
 	return score;
 }
 
-void setHighScore(uint32_t score) {
+void setHighScore(uint16_t score) {
 	EEPROM.write(kEepromScoreOffset + 0, score >> 24);
 	EEPROM.write(kEepromScoreOffset + 1, score >> 16);
 	EEPROM.write(kEepromScoreOffset + 2, score >> 8);
@@ -613,35 +630,39 @@ bool loop(State& state) {
 	return true;
 }
 
-uint32_t statefulLoop() {
+void statefulLoop(uint16_t *score, uint32_t *millis_elapsed) {
 	ShmupSfx::beginGame();
 	State state;
 	setup(state);
 	while(loop(state));
 	ShmupSfx::reset();
-	return state.score_;
+	*score = state.score_;
+	*millis_elapsed = millis() - state.millis_start_;
 }
 
-void gameover(uint32_t score) {
+void gameover(uint16_t score, uint16_t seconds_elapsed) {
 	setRGBled(0, 0, 0);
 
 	invert(true);
 	uint8_t buf[1024];
 	memset(buf, 0, 1024);
 	print("Game Over", 0, 0, buf);
-	print("Score: ", 0, 16, buf);
-	char sbuf[12];
-	itoa(score, sbuf, 10);
-	print(sbuf, 6*6, 16, buf);
-	print("High Score: ", 0, 32, buf);
-	itoa(getHighScore(), sbuf, 10);
-	print(sbuf, 12*6, 32, buf);
+	char sbuf[32];
+	sprintf(sbuf, "Score: %u / %u:%02u", score, seconds_elapsed/60, seconds_elapsed%60);
+	print(sbuf, 0, 16, buf);
+	sprintf(sbuf, "Best: %u / %u:%02u", getHighScore(), getHighTime() / 60, getHighTime() % 60);
+	print(sbuf, 0, 32, buf);
 	if (score > getHighScore()) {
 		print("NEW HIGH SCORE", 0, 48, buf);
+	}
+	if (seconds_elapsed > getHighTime()) {
+		print("NEW HIGH TIME", 0, 56, buf);
 	}
 
 	if (score > getHighScore())
 		setHighScore(score);
+	if (seconds_elapsed > getHighTime())
+		setHighTime(seconds_elapsed);
 
 	Arduboy2Core::paintScreen(buf);
 	if (write_display_) Serial.write(buf, 1024);
@@ -663,8 +684,7 @@ void showTitle() {
 	memset(buf, 0, 1024);
 	memcpy_P(buf, ShmupSprites::LOGO, 1285-541+1);
 	char hs[22];
-	memcpy(hs, "High Score: ", 11);
-	itoa(getHighScore(), hs + 11, 10);
+	sprintf(hs, "Best: %u / %u:%02u", getHighScore(), getHighTime() / 60, getHighTime() % 60);
 	print(hs, (128 - 6 * strlen(hs)) / 2, 56, buf);
 
 	Arduboy2Core::paintScreen(buf);
@@ -704,6 +724,7 @@ void loadConfiguration() {
 		enable_pause_ = true;
 		enable_help_ = true;
 		setHighScore(0);
+		setHighTime(0);
 		storeConfiguration();
 	}
 }
@@ -785,8 +806,10 @@ void configure() {
 		Arduboy2Audio::off();
 	}
 	storeConfiguration();
-	if (reset_high_score)
+	if (reset_high_score) {
 		setHighScore(0);
+		setHighTime(0);
+	}
 }
 
 void showHelp() {
@@ -844,6 +867,8 @@ void loop() {
 	showTitle();
 	randomSeed(micros());
 	if (enable_help_) showHelp();
-	uint32_t score = statefulLoop();
-	gameover(score);
+	uint16_t score;
+	uint32_t millis_elapsed;
+	statefulLoop(&score, &millis_elapsed);
+	gameover(score, millis_elapsed / 1000);
 }
