@@ -29,8 +29,7 @@ constexpr uint8_t kNumPlayerWaves = 3;
 constexpr uint8_t kNumEnemies = 15;
 constexpr uint8_t kNumBulletsPerEnemy = 2;
 constexpr uint8_t kNumEnemyBullets = kNumEnemies * kNumBulletsPerEnemy;
-constexpr int kNumHealthSprites = 10;
-constexpr int kNumScoreSprites = 10;
+constexpr int kNumNumberSprites = (128 / 4) - 1;
 constexpr int kEnemyExplosionFrames = 12;
 constexpr int kPlayerImpactFrames = 16;
 
@@ -62,11 +61,12 @@ struct State {
 	MaskedXYSprite enemy_waves_[kNumEnemies];
 	int8_t enemy_wave_ends[kNumEnemies];
 
-	MaskedXYSprite health_sprites_[kNumHealthSprites];
-	MaskedXYSprite score_sprites_[kNumScoreSprites];
+	MaskedXYSprite number_sprites_[kNumNumberSprites];
 
 	uint8_t frame_ = 0;
 	uint32_t frame_ts_ = 0;
+
+	uint32_t millis_start_ = 0;
 
 	uint8_t wave_countdown_ = 0;
 
@@ -116,8 +116,7 @@ void display(const State& state) {
 	for (uint8_t n = 0; n < 8; ++n) {
 		memset(page, inverted_ ? 0 : 255, 128);
 
-		render(state.health_sprites_, kNumHealthSprites, n, page);
-		render(state.score_sprites_, kNumScoreSprites, n, page);
+		render(state.number_sprites_, kNumNumberSprites, n, page);
 		render(state.player_bullets_, kNumPlayerBullets, n, page);
 		render(state.enemy_bullets_, kNumEnemyBullets, n, page);
 		render(state.player_waves_, kNumPlayerWaves, n, page);
@@ -150,19 +149,16 @@ void reset(State& state) {
 
 	state.player_beam_ = {ShmupSprites::beam, ShmupSprites::beamMask};
 
-	for (uint8_t i = 0; i < kNumHealthSprites; ++i) {
-		state.health_sprites_[i].setX(4 * i + 1 + kXOffset);
-		state.health_sprites_[i].setY(55 + kYOffset);
-	}
-
-	for (uint8_t i = 0; i < kNumScoreSprites; ++i) {
-		state.score_sprites_[i].setX(128 - 4 * kNumScoreSprites + 4 * i + kXOffset);
-		state.score_sprites_[i].setY(55 + kYOffset);
+	for (uint8_t i = 0; i < kNumNumberSprites; ++i) {
+		state.number_sprites_[i].setX(4 * i + 2 + kXOffset);
+		state.number_sprites_[i].setY(55 + kYOffset);
 	}
 
 	state.health_ = 1500;
 	state.score_ = 0;
 	state.player_impacting_ = 0;
+
+	state.millis_start_ = millis();
 }
 
 void setRGBled(uint8_t red, uint8_t green, uint8_t blue)
@@ -532,15 +528,27 @@ bool loop(State& state) {
 		}
 	}
 
-	// Update health
+	// Update numbers
 	{
-		char buf[kNumHealthSprites];
+		char buf[kNumNumberSprites];
+		memset(buf, 0, sizeof(buf));
+
 		itoa(state.health_, buf, 10);
-		for (uint8_t i = 0; i < kNumHealthSprites; ++i) {
-			state.health_sprites_[i].setActive(false);
+
+		char score[10];
+		itoa(state.score_, score, 10);
+		memcpy(buf + sizeof(buf) - strlen(score), score, strlen(score));
+
+
+		uint16_t elapsed_seconds = (millis() - state.millis_start_) / 1000;
+		sprintf(buf + 14, "%u:%02u", elapsed_seconds / 60, elapsed_seconds % 60);
+
+		for (uint8_t i = 0; i < kNumNumberSprites; ++i) {
+			state.number_sprites_[i].setActive(false);
 		}
-		for (uint8_t i = 0; i < kNumHealthSprites; ++i) {
-			if (!buf[i]) break;
+
+		for (uint8_t i = 0; i < kNumNumberSprites; ++i) {
+			if (!buf[i]) continue;
 			const uint8_t *raster = nullptr;
 			switch(buf[i]) {
 			case '-': raster = ShmupSprites::NUM_NEG; break;
@@ -554,38 +562,10 @@ bool loop(State& state) {
 			case '7': raster = ShmupSprites::NUM_7; break;
 			case '8': raster = ShmupSprites::NUM_8; break;
 			case '9': raster = ShmupSprites::NUM_9; break;
+			case ':': raster = ShmupSprites::NUM_COLON; break;
 			}
-			state.health_sprites_[i].setActive(true);
-			state.health_sprites_[i].sprite() = Sprite(4, 6, raster, true);
-		}
-	}
-
-	// Update score
-	{
-		char buf[kNumScoreSprites];
-		itoa(state.score_, buf, 10);
-		for (uint8_t i = 0; i < kNumScoreSprites; ++i) {
-			state.score_sprites_[i].setActive(false);
-		}
-		int skip = kNumScoreSprites - strlen(buf);
-		for (uint8_t i = skip; i < kNumScoreSprites; ++i) {
-			if (!buf[i - skip]) break;
-			const uint8_t *raster = nullptr;
-			switch(buf[i - skip]) {
-			case '-': raster = ShmupSprites::NUM_NEG; break;
-			case '0': raster = ShmupSprites::NUM_0; break;
-			case '1': raster = ShmupSprites::NUM_1; break;
-			case '2': raster = ShmupSprites::NUM_2; break;
-			case '3': raster = ShmupSprites::NUM_3; break;
-			case '4': raster = ShmupSprites::NUM_4; break;
-			case '5': raster = ShmupSprites::NUM_5; break;
-			case '6': raster = ShmupSprites::NUM_6; break;
-			case '7': raster = ShmupSprites::NUM_7; break;
-			case '8': raster = ShmupSprites::NUM_8; break;
-			case '9': raster = ShmupSprites::NUM_9; break;
-			}
-			state.score_sprites_[i].setActive(true);
-			state.score_sprites_[i].sprite() = Sprite(4, 6, raster, true);
+			state.number_sprites_[i].setActive(true);
+			state.number_sprites_[i].sprite() = Sprite(4, 6, raster, true);
 		}
 	}
 

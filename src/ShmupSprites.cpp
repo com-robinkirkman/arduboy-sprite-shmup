@@ -252,6 +252,17 @@ const uint8_t ShmupSprites::NUM_9[] PROGMEM = {
 		0b00000000,
 };
 
+const uint8_t ShmupSprites::NUM_COLON[] PROGMEM = {
+		0b00000000,
+		0b01010000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+};
+
 const uint8_t ShmupSprites::WAVE[] PROGMEM = {
 		0b00000001,
 		0b11111110,

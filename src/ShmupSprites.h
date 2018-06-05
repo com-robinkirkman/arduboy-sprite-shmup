@@ -64,6 +64,7 @@ public:
   static const uint8_t NUM_7[];
   static const uint8_t NUM_8[];
   static const uint8_t NUM_9[];
+  static const uint8_t NUM_COLON[];
 };
 
 #endif /* SRC_SPRITES_H_ */
