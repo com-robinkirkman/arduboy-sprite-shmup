@@ -802,7 +802,7 @@ void showHelp() {
 }
 
 uint8_t enableMirroring() {
-	Serial.begin(1000000);
+	Serial.begin(921600);
 	write_display_ = true;
 	uint8_t buf[1024];
 	memset(buf, 0, 1024);
