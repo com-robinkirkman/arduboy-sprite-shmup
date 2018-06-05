@@ -648,9 +648,9 @@ void gameover(uint16_t score, uint16_t seconds_elapsed) {
 	memset(buf, 0, 1024);
 	print("Game Over", 0, 0, buf);
 	char sbuf[32];
-	sprintf(sbuf, "Score: %u / %u:%02u", score, seconds_elapsed/60, seconds_elapsed%60);
+	sprintf(sbuf, "Score %u / %u:%02u", score, seconds_elapsed/60, seconds_elapsed%60);
 	print(sbuf, 0, 16, buf);
-	sprintf(sbuf, "Best: %u / %u:%02u", getHighScore(), getHighTime() / 60, getHighTime() % 60);
+	sprintf(sbuf, "Best %u / %u:%02u", getHighScore(), getHighTime() / 60, getHighTime() % 60);
 	print(sbuf, 0, 32, buf);
 	if (score > getHighScore()) {
 		print("NEW HIGH SCORE", 0, 48, buf);
@@ -684,7 +684,7 @@ void showTitle() {
 	memset(buf, 0, 1024);
 	memcpy_P(buf, ShmupSprites::LOGO, 1285-541+1);
 	char hs[22];
-	sprintf(hs, "Best: %u / %u:%02u", getHighScore(), getHighTime() / 60, getHighTime() % 60);
+	sprintf(hs, "Best %u / %u:%02u", getHighScore(), getHighTime() / 60, getHighTime() % 60);
 	print(hs, (128 - 6 * strlen(hs)) / 2, 56, buf);
 
 	Arduboy2Core::paintScreen(buf);
