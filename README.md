@@ -16,6 +16,7 @@
 ## In-Game Controls
 
 | A | Fire wave weapon |
++---+---+
 | B | Fire beam weapon |
 | &#x2b9c;&#x2b9d;&#x2b9e;&#x2b9f; | Movement |
 | A + B | Pause |
@@ -23,6 +24,7 @@
 ## Power-On Controls
 
 | A | Show options menu |
++---+---+
 | &#x2b9d; | Flashlight mode |
 | &#x2b9f; | Screen mirroring |
 
