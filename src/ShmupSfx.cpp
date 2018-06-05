@@ -20,6 +20,7 @@ const uint16_t enemy_wave_[] PROGMEM = { 7500, 2, 5000, 2, 7500, 2, 5000, 2, 750
 const uint16_t beam_[] PROGMEM = { 2000, 1, 0, 0 };
 const uint16_t enemy_impact_[] PROGMEM = { 1000, 2, 900, 2, 800, 2, 700, 2, 0, 0 };
 const uint16_t player_impact_[] PROGMEM = { 1000, 3, 1200, 3, 1400, 3, 1600, 3, 1000, 3, 1200, 3, 1400, 3, 1600, 3, 0, 0 };
+const uint16_t game_over_[] PROGMEM = {40, 1, 0, 0};
 
 const uint16_t *sfx1_;
 const uint16_t *sfx2_;
@@ -91,5 +92,8 @@ void ShmupSfx::enemyImpact() {
 }
 void ShmupSfx::playerImpact() {
 	sfx(PLAYER_IMPACT, player_impact_);
+}
+void ShmupSfx::gameOver() {
+	sfx(GAME_OVER, game_over_);
 }
 

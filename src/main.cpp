@@ -645,9 +645,14 @@ void gameover(uint32_t score) {
 	Arduboy2Core::paintScreen(buf);
 	if (write_display_) Serial.write(buf, 1024);
 
+	ShmupSfx::gameOver();
+	ShmupSfx::gameOver();
+
 	uint32_t now = micros();
 	while (micros() < now + 1000000)
 		Arduboy2Core::idle();
+
+	ShmupSfx::tick();
 
 	buttonWait();
 }

@@ -15,6 +15,7 @@ public:
 	static void begin();
 
 	static void beginGame();
+	static void gameOver();
 
 	static void bulletFired();
 	static void waveFired();
@@ -22,6 +23,7 @@ public:
 	static void beamFired();
 	static void enemyImpact();
 	static void playerImpact();
+
 	static void tick();
 	static void reset();
 
@@ -33,6 +35,7 @@ private:
 	static constexpr uint8_t ENEMY_WAVE_FIRED = 4;
 	static constexpr uint8_t BEAM_FIRED = 5;
 	static constexpr uint8_t PLAYER_IMPACT = 6;
+	static constexpr uint8_t GAME_OVER = 7;
 
 	static void sfx(uint8_t priority, const uint16_t *sptr);
 
