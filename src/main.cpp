@@ -25,7 +25,9 @@
 #include "ShmupSfx.h"
 
 constexpr uint8_t kNumPlayerBullets = 6;
-constexpr uint8_t kNumPlayerWaves = 3;
+constexpr uint8_t kNumPlayerWaves = 1;
+constexpr uint8_t kPlayerWaveDuration = 128;
+constexpr uint8_t kEnemyWaveDuration = 64;
 constexpr uint8_t kNumEnemies = 15;
 constexpr uint8_t kNumBulletsPerEnemy = 2;
 constexpr uint8_t kNumEnemyBullets = kNumEnemies * kNumBulletsPerEnemy;
@@ -477,7 +479,7 @@ bool loop(State& state) {
 			wave.setX(player.x());
 			wave.setY(player.y() - 4);
 			wave.setActive(true);
-			state.player_wave_ends_[i] = player.x() + 64;
+			state.player_wave_ends_[i] = player.x() + kPlayerWaveDuration;
 			state.wave_countdown_ = 8;
 			ShmupSfx::waveFired();
 			break;
@@ -541,7 +543,7 @@ bool loop(State& state) {
 				wave.setActive(true);
 				wave.setX(enemy.x());
 				wave.setY(enemy.y() - 4);
-				state.enemy_wave_ends[i] = enemy.x() - 64;
+				state.enemy_wave_ends[i] = enemy.x() - kEnemyWaveDuration;
 				ShmupSfx::enemyWaveFired();
 			}
 		}
