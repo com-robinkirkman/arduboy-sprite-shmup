@@ -236,10 +236,12 @@ bool loop(State& state) {
 		}
 		ShmupSfx::reset();
 		setRGBled(0,0,0);
+		state.millis_start_ -= millis();
 		while (Arduboy2Core::buttonsState()) Arduboy2Core::idle();
 		while (Arduboy2Core::buttonsState() != (A_BUTTON | B_BUTTON)) Arduboy2Core::idle();
 		while (Arduboy2Core::buttonsState()) Arduboy2Core::idle();
 		ShmupSfx::beginGame();
+		state.millis_start_ += millis();
 		return true;
 	}
 
