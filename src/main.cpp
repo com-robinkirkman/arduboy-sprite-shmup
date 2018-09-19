@@ -696,8 +696,26 @@ void showTitle() {
 
 	if (Arduboy2Core::buttonsState())
 		while (Arduboy2Core::buttonsState()) Arduboy2Core::idle();
-	else
-		buttonWait();
+	else {
+		for (;;) {
+			uint8_t b;
+			while (!(b = Arduboy2Core::buttonsState())) Arduboy2Core::idle();
+			uint8_t b2;
+			while ((b2 = Arduboy2Core::buttonsState())) { b |= b2; Arduboy2Core::idle(); }
+
+			if (b != (UP_BUTTON | DOWN_BUTTON | RIGHT_BUTTON | LEFT_BUTTON)) return;
+
+			Arduboy2Core::displayOff();
+
+			do {
+				b = 0;
+				while (!(b = Arduboy2Core::buttonsState())) Arduboy2Core::idle();
+				while ((b2 = Arduboy2Core::buttonsState())) { b |= b2; Arduboy2Core::idle(); }
+			} while (b != (UP_BUTTON | DOWN_BUTTON | RIGHT_BUTTON | LEFT_BUTTON));
+
+			Arduboy2Core::displayOn();
+		}
+	}
 }
 
 void storeConfiguration() {
