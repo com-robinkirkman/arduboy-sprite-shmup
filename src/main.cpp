@@ -540,7 +540,7 @@ bool loop(State& state) {
 					break;
 				}
 			}
-			if(rand() % 24 == 0 && !state.enemy_waves_[i].active()) {
+			if(rand() % 16 == 0 && !state.enemy_waves_[i].active()) {
 				MaskedXYSprite& wave = state.enemy_waves_[i];
 				wave.setActive(true);
 				wave.setX(enemy.x());
