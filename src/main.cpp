@@ -24,9 +24,9 @@
 #include "MaskedXYSprite.h"
 #include "ShmupSfx.h"
 
-constexpr uint8_t kNumPlayerBullets = 6;
-constexpr uint8_t kNumPlayerWaves = 1;
-constexpr uint8_t kPlayerWaveDuration = 128;
+constexpr uint8_t kNumPlayerBullets = 4;
+constexpr uint8_t kNumPlayerWaves = 4;
+constexpr uint8_t kPlayerWaveDuration = 64;
 constexpr uint8_t kEnemyWaveDuration = 128;
 constexpr uint8_t kNumEnemies = 15;
 constexpr uint8_t kNumBulletsPerEnemy = 2;
@@ -457,7 +457,7 @@ bool loop(State& state) {
 	}
 
 	// Player bullet firing
-	if ((state.frame_ % 10) == 0) {
+	if ((state.frame_ % 15) == 0) {
 		for (uint8_t i = 0; i < kNumPlayerBullets; ++i) {
 			MaskedXYSprite& bullet = state.player_bullets_[i];
 			if (bullet.active()) continue;
@@ -472,6 +472,7 @@ bool loop(State& state) {
 	// Player wave firing
 	if (state.wave_countdown_ > 0)
 		--state.wave_countdown_;
+	if (!(b & A_BUTTON)) state.wave_countdown_ = 0;
 	if ((b & A_BUTTON) && !state.wave_countdown_) {
 		for (uint8_t i = 0; i < kNumPlayerWaves; ++i) {
 			MaskedXYSprite& wave = state.player_waves_[i];
@@ -480,7 +481,7 @@ bool loop(State& state) {
 			wave.setY(player.y() - 4);
 			wave.setActive(true);
 			state.player_wave_ends_[i] = player.x() + kPlayerWaveDuration;
-			state.wave_countdown_ = 8;
+			state.wave_countdown_ = 24;
 			ShmupSfx::waveFired();
 			break;
 		}
@@ -517,8 +518,8 @@ bool loop(State& state) {
 	for (uint8_t i = 0; i < kNumEnemies; ++i) {
 		MaskedXYSprite& enemy = state.enemy_[i];
 		if (!enemy.active()) continue;
-		if ((state.frame_ + state.enemy_frame_[i]) % 12 == 0) {
-			if (rand() % 4 == 0) {
+		if ((state.frame_ + state.enemy_frame_[i]) % 4 == 0) {
+			if (rand() % 24 == 0) {
 				int8_t spread = 4 + rand() % 5;
 				for (uint8_t j = 0; j < kNumBulletsPerEnemy; ++j) {
 					MaskedXYSprite& bullet = state.enemy_bullets_[i * kNumBulletsPerEnemy + j];
@@ -538,7 +539,8 @@ bool loop(State& state) {
 					state.enemy_bullet_ydelta_[i * kNumBulletsPerEnemy + j] = spread;
 					break;
 				}
-			} else if(rand() % 12 == 0 && !state.enemy_waves_[i].active()) {
+			}
+			if(rand() % 24 == 0 && !state.enemy_waves_[i].active()) {
 				MaskedXYSprite& wave = state.enemy_waves_[i];
 				wave.setActive(true);
 				wave.setX(enemy.x());
